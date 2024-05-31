@@ -1,0 +1,113 @@
+{
+    "env": {
+        "browser": true,
+        "node": true,
+        "commonjs": false,
+        "shared-node-browser": false,
+        "es6": true,
+        "worker": false,
+        "amd": false,
+        "mocha": true,
+        "jasmine": false,
+        "jest": false,
+        "phantomjs": false,
+        "protractor": false,
+        "qunit": false,
+        "jquery": false,
+        "prototypejs": false,
+        "shelljs": false,
+        "meteor": false,
+        "mongo": false,
+        "applescript": false,
+        "nashorn": false,
+        "serviceworker": false,
+        "atomtest": false,
+        "embertest": false,
+        "webextensions": false,
+        "greasemonkey": false
+    },
+    "root": true,
+    "extends": ["eslint:recommended", "plugin:mocha/recommended"],
+    "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": 11,
+        "ecmaFeatures": {
+            "impliedStrict": true
+        }
+    },
+    "rules": {
+      // Enforcing
+        "indent": [
+            "error",
+            2
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "quotes": [
+            "error",
+            "single"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "no-bitwise": ["error"],
+        "camelcase": ["off"],
+        "curly": ["error"],
+        "eqeqeq": ["error"],
+        "guard-for-in": ["error"],
+        "wrap-iife": ["error"],
+        "no-use-before-define": ["off"],
+        "new-cap": ["error", { "properties": false }],
+        "no-caller": ["error"],
+        "no-empty": ["error"],
+        "no-new": ["error"],
+        "no-plusplus": ["off"],
+        "no-undef": ["error"],
+        "no-unused-vars": ["off"],
+        "max-params": ["error", 10],
+        "max-depth": ["error", 5],
+        "max-statements": ["error", 40],
+        "complexity": ["error", 8],
+        "max-len": ["error", {"code": 120, "comments": 140}],
+        "no-var": ["off"],
+
+        // Relaxing
+        "no-debugger": ["error"],
+        "no-eq-null": ["error"],
+        "no-eval": ["error"],
+        "no-iterator": ["error"],
+        "no-loop-func": ["off"],
+        "no-multi-str": ["error"],
+        "require-yield": ["error"],
+        "valid-typeof": ["error"],
+        "no-proto": ["error"],
+        "no-script-url": ["error"],
+        "no-shadow": ["error"],
+        "dot-notation": ["error"],
+        "no-new-func": ["error"],
+        "no-new-object": ["error"],
+        "mocha/no-mocha-arrows": ["off"]
+    },
+    "plugins": [
+        "mocha"
+    ],
+    // Custom Globals
+    "globals": {
+      "require"  : false,
+      "module"   : false,
+      "Promise"  : false,
+      "GLOBAL"   : false,
+      "angular"  : false,
+      "moment"   : false,
+      "inject"   : false,
+      "config"   : false,
+      "spyOn"    : false,
+      "mock"     : false,
+      "expect"   : false,
+      "$"        : false,
+      "sinon"    : false
+    }        // additional predefined global variables
+}

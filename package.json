@@ -1,0 +1,119 @@
+{
+  "author": {
+    "name": "MetaApi DMCC",
+    "email": "support@metaapi.cloud"
+  },
+  "contributors": [
+    {
+      "name": "MetaApi DMCC",
+      "email": "support@metaapi.cloud"
+    }
+  ],
+  "bugs": {
+    "email": "support@metaapi.cloud",
+    "url": "https://github.com/agiliumtrade-ai/copyfactory-javascript-sdk/issues"
+  },
+  "keywords": [
+    "metaapi.cloud",
+    "MetaTrader",
+    "MetaTrader 5",
+    "MetaTrader 4",
+    "MetaTrader5",
+    "MetaTrader4",
+    "MT",
+    "MT4",
+    "MT5",
+    "forex",
+    "copy trading",
+    "trade copying",
+    "copytrade",
+    "API",
+    "REST",
+    "client",
+    "sdk",
+    "cloud",
+    "browser"
+  ],
+  "name": "metaapi.cloud-copyfactory-sdk",
+  "description": "Javascript SDK for SDK for CopyFactory trade copying API. Can copy trades both between MetaTrader 5 (MT5) and MetaTrader 4 (MT4). (https://metaapi.cloud)",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agiliumtrade-ai/copyfactory-javascript-sdk.git"
+  },
+  "version": "7.1.6",
+  "dependencies": {
+    "@log4js-node/log4js-api": "~1.0.2",
+    "axios": "~1.3.6",
+    "moment": "~2.29.4",
+    "promise.any": "~2.0.5",
+    "randomstring": "~1.2.3",
+    "tls": "^0.0.1"
+  },
+  "devDependencies": {
+    "@swc-node/register": "~1.4.2",
+    "@swc/cli": "~0.1.62",
+    "@swc/core": "~1.3.56",
+    "copyfiles": "~2.4.1",
+    "cross-env": "~7.0.3",
+    "eslint": "~7.1.0",
+    "eslint-plugin-mocha": "~7.0.0",
+    "log4js": "~6.9.1",
+    "mocha": "~7.2.0",
+    "module-alias": "~2.2.2",
+    "should": "~13.2.3",
+    "sinon": "~9.0.2",
+    "swc-loader": "~0.2.3",
+    "webpack": "~5.82",
+    "webpack-cli": "~5.0.2"
+  },
+  "browser": {
+    "tls": false,
+    "buffer": false,
+    "stream": false,
+    "fs": false,
+    "assert": false,
+    "constants": false,
+    "crypto": false,
+    "http": false,
+    "https": false,
+    "process": false,
+    "url": false,
+    "util": false,
+    "zlib": false,
+    "path": false,
+    "net": false,
+    "os": false
+  },
+  "module": "./dists/esm/index.js",
+  "unpkg": "./dists/umd/index.js",
+  "main": "./dists/cjs/index.js",
+  "scripts": {
+    "test": "cross-env SWC=true mocha --exit --require @swc-node/register --require ./aliases.js lib/*/*/*/*.spec.es6 lib/*/*/*.spec.es6 lib/*/*.spec.es6 lib/*.spec.es6",
+    "lint:fix": "eslint --ext es6 ./lib --fix",
+    "lint": "eslint --ext es6 ./lib",
+    "build-win": "npm run clean-win | npm run build:optimized && npm run build:transpile && npm run build:types",
+    "build": "npm run clean; npm run build:optimized && npm run build:transpile && npm run build:types && npm run build:backward-compatiibility",
+    "build:optimized": "npx webpack --config webpack.config.js",
+    "build:transpile": "node ./swc/swc.transform.cjs.js && node ./swc/swc.transform.esm.js ",
+    "build:types": "copyfiles -u 1 \"lib/**/*.d.ts\" build/esm && copyfiles -u 1 \"lib/**/*.d.ts\" build/cjs && copyfiles -u 1 \"lib/**/*.d.ts\" dists/cjs && copyfiles -u 1 \"lib/**/*.d.ts\" dists/esm && copyfiles -u 1 \"lib/**/*.d.ts\" dists/umd",
+    "build:backward-compatiibility": "copyfiles -u 2 \"build/cjs/**/*\" dist/",
+    "clean-win": "(if exist dist rmdir /Q /S dist) && (if exist build rmdir /Q /S build) && (if exist dists rmdir /Q /S dists)",
+    "clean": "rm -rf build; rm -rf dist; rm -rf dists;"
+  },
+  "exports": {
+    ".": {
+      "import": "./dists/esm/index.js",
+      "require": "./dists/cjs/index.js"
+    },
+    "./dist/*": "./dist/*.js",
+    "./dist/": "./dist/",
+    "./cjs": "./build/cjs/index.js",
+    "./esm": "./build/esm/index.js",
+    "./browser": "./dists/umd/index.js",
+    "./node": "./dists/cjs/index.js",
+    "./web": "./dists/esm/index.js"
+  },
+  "typings": "./lib/index.d.ts",
+  "types": "./lib/index.d.ts"
+}
