@@ -5,9 +5,6 @@ import sinon from 'sinon';
 import DomainClient from './domain.client';
 import { ValidationError, InternalError } from './errorHandler';
 
-/**
- * @test {DomainClient}
- */
 describe('DomainClient', () => {
 
   let domainClient;
@@ -31,14 +28,14 @@ describe('DomainClient', () => {
     failoverRequestStub = sandbox.stub(httpClient, 'requestWithFailover');
     requestStub = sandbox.stub(httpClient, 'request');
     requestStub.withArgs({
-      url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+      url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
       method: 'GET',
       headers: {
         'auth-token': token
       },
     }).resolves(expected);
     getRegionsStub = requestStub.withArgs({
-      url: 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai/users/current/regions',
+      url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/regions',
       method: 'GET',
       headers: {
         'auth-token': token
@@ -46,7 +43,7 @@ describe('DomainClient', () => {
       json: true,
     }).resolves(['vint-hill', 'us-west']);
     getHostStub = requestStub.withArgs({
-      url: 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai/users/current/servers/mt-client-api',
+      url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/servers/mt-client-api',
       method: 'GET',
       headers: {
         'auth-token': token
@@ -60,9 +57,6 @@ describe('DomainClient', () => {
     clock.restore();
   });
 
-  /**
-   * @test {DomainClient#requestCopyFactory}
-   */
   describe('requestCopyFactory', () => {
 
     const opts = {
@@ -73,14 +67,11 @@ describe('DomainClient', () => {
       },
     };
 
-    /**
-     * @test {DomainClient#requestCopyFactory}
-     */
     it('should execute request', async () => {
       const response = await domainClient.requestCopyFactory(opts);
       sinon.assert.match(response, expected);
       sinon.assert.calledWith(requestStub, {
-        url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+        url: 'https:/ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
         method: 'GET',
         headers: {
           'auth-token': token
@@ -88,14 +79,11 @@ describe('DomainClient', () => {
       });
     });
 
-    /**
-     * @test {DomainClient#requestCopyFactory}
-     */
     it('should use cached url on repeated request', async () => {
       await domainClient.requestCopyFactory(opts);
       const response = await domainClient.requestCopyFactory(opts);
       sinon.assert.calledWith(requestStub, {
-        url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+        url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
         method: 'GET',
         headers: {
           'auth-token': token
@@ -106,16 +94,13 @@ describe('DomainClient', () => {
       sinon.assert.calledOnce(getRegionsStub);
     });
 
-    /**
-     * @test {DomainClient#requestCopyFactory}
-     */
     it('should request url again if expired', async () => {
       await domainClient.requestCopyFactory(opts);
       await clock.tickAsync(610000);
       const response = await domainClient.requestCopyFactory(opts);
       sinon.assert.match(response, expected);
       sinon.assert.calledWith(requestStub, {
-        url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+        url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
         method: 'GET',
         headers: {
           'auth-token': token
@@ -125,12 +110,9 @@ describe('DomainClient', () => {
       sinon.assert.calledTwice(getRegionsStub);
     });
 
-    /**
-     * @test {DomainClient#requestCopyFactory}
-     */
     it('should return request error', async () => {
       requestStub.withArgs({
-        url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+        url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
         method: 'GET',
         headers: {
           'auth-token': token
@@ -144,9 +126,6 @@ describe('DomainClient', () => {
       }
     });
 
-    /**
-     * @test {DomainClient#requestCopyFactory}
-     */
     it('should return error if failed to get host', async () => {
       getHostStub.throws(new ValidationError('test'));
       try {
@@ -157,14 +136,8 @@ describe('DomainClient', () => {
       }
     });
 
-    /**
-     * @test {DomainClient#requestCopyFactory}
-     */
     describe('regions', () => {
 
-      /**
-       * @test {DomainClient#requestCopyFactory}
-       */
       it('should return error if failed to get regions', async () => {
         getRegionsStub.throws(new ValidationError('test'));
         try {
@@ -175,12 +148,9 @@ describe('DomainClient', () => {
         }
       });
 
-      /**
-       * @test {DomainClient#requestCopyFactory}
-       */
       it('should try another region if the first failed', async () => {
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/' +
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/' +
           'current/configuration/strategies',
           method: 'GET',
           headers: {
@@ -188,7 +158,7 @@ describe('DomainClient', () => {
           },
         }).rejects(new InternalError('test'));
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.us-west.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
           method: 'GET',
           headers: {
             'auth-token': token
@@ -196,7 +166,7 @@ describe('DomainClient', () => {
         }).resolves(expected);
         const response = await domainClient.requestCopyFactory(opts);
         sinon.assert.calledWith(requestStub, {
-          url: 'https://copyfactory-api-v1.us-west.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
           method: 'GET',
           headers: {
             'auth-token': token
@@ -208,12 +178,9 @@ describe('DomainClient', () => {
         sinon.assert.calledOnce(getRegionsStub);
       });
 
-      /**
-       * @test {DomainClient#requestCopyFactory}
-       */
       it('should return error if all regions failed', async () => {
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/' + 
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/' + 
           'current/configuration/strategies',
           method: 'GET',
           headers: {
@@ -221,7 +188,7 @@ describe('DomainClient', () => {
           },
         }).throws(new InternalError('test'));
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.us-west.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
           method: 'GET',
           headers: {
             'auth-token': token
@@ -236,12 +203,9 @@ describe('DomainClient', () => {
         }
       });
 
-      /**
-       * @test {DomainClient#requestCopyFactory}
-       */
       it('should roll over to the first region if all regions failed', async () => {
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/' + 
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/' + 
           'current/configuration/strategies',
           method: 'GET',
           headers: {
@@ -249,7 +213,7 @@ describe('DomainClient', () => {
           },
         }).throws(new InternalError('test'));
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.us-west.agiliumtrade.agiliumtrade.ai/users/current/configuration/strategies',
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/configuration/strategies',
           method: 'GET',
           headers: {
             'auth-token': token
@@ -263,7 +227,7 @@ describe('DomainClient', () => {
           error.name.should.equal('InternalError');
         }
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/' + 
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/' + 
           'current/configuration/strategies',
           method: 'GET',
           headers: {
@@ -274,12 +238,9 @@ describe('DomainClient', () => {
         sinon.assert.match(response, expected);
       });
 
-      /**
-       * @test {DomainClient#requestCopyFactory}
-       */
       it('should not skip regions if two parallel requests fail', async () => {
         getRegionsStub = requestStub.withArgs({
-          url: 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai/users/current/regions',
+          url: 'https://fusers/current/regions',
           method: 'GET',
           headers: {
             'auth-token': token
@@ -287,7 +248,7 @@ describe('DomainClient', () => {
           json: true,
         }).resolves(['vint-hill', 'us-west', 'us-east']);
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.vint-hill.agiliumtrade.agiliumtrade.ai/users/' + 
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/' + 
           'current/configuration/strategies',
           method: 'GET',
           headers: {
@@ -298,7 +259,7 @@ describe('DomainClient', () => {
           throw new InternalError('test');
         });
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.us-west.agiliumtrade.agiliumtrade.ai/users/' + 
+          url: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/users/' + 
           'current/configuration/strategies',
           method: 'GET',
           headers: {
@@ -306,7 +267,7 @@ describe('DomainClient', () => {
           },
         }).resolves(expected);
         requestStub.withArgs({
-          url: 'https://copyfactory-api-v1.us-east.agiliumtrade.agiliumtrade.ai/users/' + 
+          url: 'https:/ec2-54-161-191-126.compute-1.amazonaws.com/users/' + 
           'current/configuration/strategies',
           method: 'GET',
           headers: {
@@ -332,7 +293,7 @@ describe('DomainClient', () => {
 
     it('should execute request', async () => {
       const opts = {
-        url:  'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai/users/current/accounts/accountId',
+        url:  'https:/ec2-54-161-191-126.compute-1.amazonaws.com/users/current/accounts/accountId',
         method: 'GET',
         headers: {
           'auth-token': token
@@ -497,7 +458,7 @@ describe('DomainClient', () => {
         },
       });
       const getAccountStub = failoverRequestStub.withArgs({
-        url:  'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai/users/current/accounts/accountId',
+        url:  'https:/ec2-54-161-191-126.compute-1.amazonaws.com/users/current/accounts/accountId',
         method: 'GET',
         headers: {
           'auth-token': token
@@ -537,7 +498,7 @@ describe('DomainClient', () => {
     beforeEach(() => {
       expectedAccount = {_id: 'accountId2', region: 'germany', accountReplicas: []};
       getAccountStub = failoverRequestStub.withArgs({
-        url:  'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai/users/current/accounts/accountId',
+        url:  'https:/ec2-54-161-191-126.compute-1.amazonaws.com/users/current/accounts/accountId',
         method: 'GET',
         headers: {
           'auth-token': token
@@ -582,7 +543,7 @@ describe('DomainClient', () => {
         primaryAccountId: 'accountId2'
       });
       failoverRequestStub.withArgs({
-        url:  'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai/users/current/accounts/accountId2',
+        url:  'https:/ec2-54-161-191-126.compute-1.amazonaws.com/users/current/accounts/accountId2',
         method: 'GET',
         headers: {
           'auth-token': token
@@ -613,7 +574,7 @@ describe('DomainClient', () => {
     it('should return signal client host', async () => {
       const response = await domainClient.getSignalClientHost(['vint-hill']);
       sinon.assert.match(response, { 
-        host: 'https://copyfactory-api-v1',
+        host: 'https:///mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai/',
         regions: ['vint-hill'],
         domain: 'agiliumtrade.agiliumtrade.ai' 
       });

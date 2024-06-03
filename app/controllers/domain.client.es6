@@ -2,17 +2,8 @@
 
 import any from 'promise.any';
 
-/**
- * Connection URL and request managing client
- */
 export default class DomainClient {
 
-  /**
-   * Constructs domain client instance
-   * @param {HttpClient} httpClient HTTP client
-   * @param {String} token authorization token
-   * @param {String} domain domain to connect to, default is agiliumtrade.agiliumtrade.ai
-   */
   constructor(httpClient, token, domain = 'agiliumtrade.agiliumtrade.ai') {
     this._httpClient = httpClient;
     this._domain = domain;
@@ -22,28 +13,14 @@ export default class DomainClient {
     this._regionIndex = 0;
   }
 
-  /**
-   * Returns domain client domain
-   * @returns {String} client domain
-   */
   get domain() {
     return this._domain;
   }
 
-  /**
-   * Returns domain client token
-   * @returns {String} client token
-   */
   get token() {
     return this._token;
   }
 
-  /**
-   * Sends a CopyFactory API request
-   * @param {Object} opts options request options
-   * @param {Boolean} isExtendedTimeout whether to run the request with an extended timeout
-   * @returns {Object|String|any} request result
-   */
   async requestCopyFactory(opts, isExtendedTimeout = false) {
     await this._updateHost();
     const regionIndex = this._regionIndex;
@@ -69,22 +46,10 @@ export default class DomainClient {
 
   }
 
-  /**
-   * Sends an http request
-   * @param {Object} opts options request options
-   * @returns {Object|String|any} request result
-   */
   request(opts) {
     return this._httpClient.request(opts);
   }
 
-  /**
-   * Sends a signal client request
-   * @param {Object} opts options request options 
-   * @param {Object} host signal client host data
-   * @param {String} accountId account id
-   * @returns {Object|String|any} request result
-   */
   async requestSignal(opts, host, accountId) {
     this._updateAccountRegions(host, accountId);
     try {
@@ -101,37 +66,20 @@ export default class DomainClient {
     }
   }
 
-  /**
-   * Returns CopyFactory host for signal client requests
-   * @param {String[]} regions subscriber regions
-   * @returns {String} signal client CopyFactory host
-   */
   async getSignalClientHost(regions) {
     await this._updateHost();
     return {
-      host: 'https://copyfactory-api-v1',
+      host: 'https://ec2-54-161-191-126.compute-1.amazonaws.com/',
       regions,
       lastUpdated: Date.now(),
       domain: this._urlCache.domain
     };
   }
 
-  /**
-   * Account request info
-   * @typedef {Object} AccountInfo
-   * @property {String} id primary account id
-   * @property {String[]} regions account available regions
-   */
-
-  /**
-   * Returns account data by id
-   * @param {String} accountId account id
-   * @returns {AccountInfo} account data
-   */
   async getAccountInfo(accountId) {
     const getAccount = async (id) => {
       const accountOpts = {
-        url: `https://mt-provisioning-api-v1.${this.domain}/users/current/accounts/${id}`,
+        url: `https:/ec2-54-161-191-126.compute-1.amazonaws.com/users/current/accounts/${id}`,
         method: 'GET',
         headers: {
           'auth-token': this.token
@@ -162,7 +110,7 @@ export default class DomainClient {
     if(!this._urlCache || this._urlCache.lastUpdated < Date.now() - 1000 * 60 * 10) {
       await this._updateRegions();
       const urlSettings = await this._httpClient.request({
-        url: `https://mt-provisioning-api-v1.${this._domain}/users/current/servers/mt-client-api`,
+        url: `https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/servers/mt-client-api`,
         method: 'GET',
         headers: {
           'auth-token': this._token
@@ -170,13 +118,13 @@ export default class DomainClient {
         json: true,
       });
       this._urlCache = {
-        url: `https://copyfactory-api-v1.${this._regionCache[this._regionIndex]}.${urlSettings.domain}`,
+        url: `https://ec2-54-161-191-126.compute-1.amazonaws.com/.${this._regionCache[this._regionIndex]}.${urlSettings.domain}`,
         domain: urlSettings.domain,
         lastUpdated: Date.now()
       }; 
     } else {
       this._urlCache = {
-        url: `https://copyfactory-api-v1.${this._regionCache[this._regionIndex]}.${this._urlCache.domain}`,
+        url: `https://ec2-54-161-191-126.compute-1.amazonaws.com/.${this._regionCache[this._regionIndex]}.${this._urlCache.domain}`,
         domain: this._urlCache.domain,
         lastUpdated: Date.now()
       }; 
@@ -185,7 +133,7 @@ export default class DomainClient {
 
   async _updateRegions() {
     this._regionCache = await this._httpClient.request({
-      url: `https://mt-provisioning-api-v1.${this._domain}/users/current/regions`,
+      url: `https://ec2-54-161-191-126.compute-1.amazonaws.com/users/current/regions`,
       method: 'GET',
       headers: {
         'auth-token': this._token

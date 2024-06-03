@@ -7,24 +7,8 @@ import {
 } from './errorHandler';
 import TimeoutError from './timeoutError';
 
-/**
- * HTTP client library based on request-promise
- */
 export default class HttpClient {
 
-  /**
-   * @typedef {Object} RetryOptions retry options
-   * @property {Number} [retries] the number of attempts to retry failed request, default 5
-   * @property {Number} [minDelayInSeconds] minimum delay in seconds before retrying, default 1
-   * @property {Number} [maxDelayInSeconds] maximum delay in seconds before retrying, default 30
-   */
-
-  /**
-   * Constructs HttpClient class instance
-   * @param {Number} [timeout] request timeout in seconds
-   * @param {Number} [extendedTimeout] request timeout in seconds
-   * @param {RetryOptions} [retryOpts] retry options
-   */
   constructor(timeout = 10, extendedTimeout = 70, retryOpts = {}) {
     this._timeout = timeout * 1000;
     this._extendedTimeout = extendedTimeout * 1000;
@@ -33,12 +17,6 @@ export default class HttpClient {
     this._maxRetryDelay = (retryOpts.maxDelayInSeconds || 30) * 1000;
   }
 
-  /**
-   * Performs a request. Response errors are returned as ApiError or subclasses.
-   * @param {Object} options request options
-   * @param {Boolean} isExtendedTimeout whether to run the request with an extended timeout
-   * @returns {Object|String|any} request result
-   */
   async request(options, isExtendedTimeout, endTime = Date.now() + this._maxRetryDelay * this._retries) {
     options.timeout = isExtendedTimeout ? this._extendedTimeout : this._timeout;
     try {
@@ -63,11 +41,6 @@ export default class HttpClient {
     }
   }
 
-  /**
-   * Performs a request with a failover. Response errors are returned as ApiError or subclasses.
-   * @param {Object} options request options
-   * @returns {Object|String|any} request result
-   */
   async requestWithFailover(options, retryCounter = 0, endTime = Date.now() + this._maxRetryDelay * this._retries) {
     options.timeout = this._timeout;
     let retryAfterSeconds = 0;
@@ -130,7 +103,6 @@ export default class HttpClient {
     throw error;
   }
 
-  // eslint-disable-next-line complexity
   _convertError(err) {
     const errorResponse = err.response || {};
     const errorData = errorResponse.data || {};
@@ -161,17 +133,8 @@ export default class HttpClient {
   }
 }
 
-/**
- * HTTP client service mock for tests
- */
 export class HttpClientMock extends HttpClient {
 
-  /**
-   * Constructs HTTP client mock
-   * @param {Function(options:Object):Promise} requestFn mocked request function
-   * @param {Number} timeout request timeout in seconds
-   * @param {RetryOptions} retryOpts retry options
-   */
   constructor(requestFn, timeout, extendedTimeout, retryOpts) {
     super(timeout, extendedTimeout, retryOpts);
     this._requestFn = requestFn;

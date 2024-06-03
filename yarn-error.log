@@ -1,0 +1,48 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Users\pc\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js
+
+PATH: 
+  C:\Users\pc\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\local\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\pc\bin;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32\OpenSSH;C:\ProgramData\chocolatey\bin;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Java\jdk1.8.0_211\bin;C:\Users\pc\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Program Files\php;C:\composer;C:\Users\pc\AppData\Local\Programs\Python\Python311\Scripts;C:\Users\pc\AppData\Local\Programs\Python\Python311;C:\Users\pc\AppData\Local\.meteor\;C:\Users\pc\AppData\Roaming\nvm\v16.20.0\node_modules\meteor\node_modules\.bin;C:\Users\pc\AppData\Roaming\nvm\v16.20.0\node_modules\node_modules\.bin;C:\Users\pc\AppData\Roaming\nvm\v16.20.0\node_modules\.bin;C:\Users\pc\AppData\Roaming\nvm\node_modules\.bin;C:\Users\pc\AppData\Roaming\node_modules\.bin;C:\Users\pc\AppData\node_modules\.bin;C:\Users\pc\node_modules\.bin;C:\Users\node_modules\.bin;C:\node_modules\.bin;C:\Users\pc\AppData\Roaming\nvm\v16.20.0\node_modules\npm\node_modules\@npmcli\run-script\lib\node-gyp-bin;C:\Users\pc\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\local\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\pc\bin;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32\OpenSSH;C:\ProgramData\chocolatey\bin;C:\Program Files\Git\cmd;C:\Prog;C:\Users\pc\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\pc\AppData\Roaming\npm;C:\Program Files\Git\usr\bin\vendor_perl;C:\Program Files\Git\usr\bin\core_perl
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  20.0.0
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: ENOENT: no such file or directory, open 'C:\Users\pc\AppData\Local\Yarn\Cache\v6\npm-@aws-sdk-middleware-logger-3.370.0-c9f694d7e1dd47b5e6e8eab94793fc1e272b1e26-integrity\node_modules\@aws-sdk\middleware-logger\.yarn-metadata.json'
+
+npm manifest: 
+  {
+    "name": "node-express-mongodb",
+    "version": "1.0.0",
+    "description": "Node.js Restful CRUD API with Node.js, Express and MongoDB",
+    "main": "server.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+      "nodejs",
+      "express",
+      "rest",
+      "api",
+      "mongodb"
+    ],
+    "author": "bezkoder",
+    "license": "ISC",
+    "dependencies": {
+      "cors": "^2.8.5",
+      "express": "^4.18.2",
+      "mongoose": "^6.11.1"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

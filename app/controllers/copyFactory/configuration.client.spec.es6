@@ -60,7 +60,7 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke generateStrategyId method, because you have connected with account access token. ' +
-        'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
@@ -112,7 +112,7 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke getStrategies method, because you have connected with account access token. ' +
-          'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+          'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
@@ -153,7 +153,7 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke getStrategy method, because you have connected with account access token. ' +
-          'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+          'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
@@ -196,7 +196,7 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke updateStrategy method, because you have connected with account access token. ' +
-        'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
@@ -225,14 +225,11 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke removeStrategy method, because you have connected with account access token. ' +
-        'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
 
-  /**
-   * @test {ConfigurationClient#getPortfolioStrategies}
-   */
   it('should retrieve portfolio strategies from API', async () => {
     let expected = [{
       _id: 'ABCD',
@@ -264,9 +261,6 @@ describe('ConfigurationClient', () => {
     }, true);
   });
 
-  /**
-   * @test {ConfigurationClient#getPortfolioStrategies}
-   */
   it('should not retrieve portfolio strategies from API with account token', async () => {
     domainClient = new DomainClient(httpClient, 'token');
     copyFactoryClient = new ConfigurationClient(domainClient);
@@ -277,14 +271,11 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke getPortfolioStrategies method, because you have connected with account access token. ' +
-        'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
 
-  /**
-   * @test {ConfigurationClient#getPortfolioStrategy}
-   */
   it('should retrieve portfolio strategy from API', async () => {
     let expected = {
       _id: 'ABCD',
@@ -311,9 +302,6 @@ describe('ConfigurationClient', () => {
     });
   });
 
-  /**
-   * @test {ConfigurationClient#getPortfolioStrategy}
-   */
   it('should not retrieve portfolio strategy from API with account token', async () => {
     domainClient = new DomainClient(httpClient, 'token');
     copyFactoryClient = new ConfigurationClient(domainClient);
@@ -324,14 +312,11 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke getPortfolioStrategy method, because you have connected with account access token. ' +
-        'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
 
-  /**
-   * @test {ConfigurationClient#updatePortfolioStrategy}
-   */
   it('should update portfolio strategy via API', async () => {
     const strategy = {
       name: 'Test strategy',
@@ -354,9 +339,6 @@ describe('ConfigurationClient', () => {
     });
   });
 
-  /**
-   * @test {ConfigurationClient#updatePortfolioStrategy}
-   */
   it('should not update portfolio strategy via API with account token', async () => {
     domainClient = new DomainClient(httpClient, 'token');
     copyFactoryClient = new ConfigurationClient(domainClient);
@@ -367,14 +349,11 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke updatePortfolioStrategy method, because you have connected with account access token. ' +
-        'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
 
-  /**
-   * @test {ConfigurationClient#removePortfolioStrategy}
-   */
   it('should remove portfolio strategy via API', async () => {
     const payload = {mode: 'preserve', removeAfter: '2020-08-24T00:00:00.000Z'};
     await copyFactoryClient.removePortfolioStrategy('ABCD', payload);
@@ -389,9 +368,6 @@ describe('ConfigurationClient', () => {
     });
   });
 
-  /**
-   * @test {ConfigurationClient#removePortfolioStrategy}
-   */
   it('should not remove portfolio strategy from via with account token', async () => {
     domainClient = new DomainClient(httpClient, 'token');
     copyFactoryClient = new ConfigurationClient(domainClient);
@@ -402,14 +378,11 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke removePortfolioStrategy method, because you have connected with account access token. ' +
-        'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
 
-  /**
-   * @test {ConfigurationClient#removePortfolioStrategyMember}
-   */
   it('should remove portfolio strategy member via API', async () => {
     const payload = {mode: 'preserve', removeAfter: '2020-08-24T00:00:00.000Z'};
     await copyFactoryClient.removePortfolioStrategyMember('ABCD', 'BCDE', payload);
@@ -424,9 +397,6 @@ describe('ConfigurationClient', () => {
     });
   });
   
-  /**
-     * @test {ConfigurationClient#removePortfolioStrategyMember}
-     */
   it('should not remove portfolio strategy member from via with account token', async () => {
     domainClient = new DomainClient(httpClient, 'token');
     copyFactoryClient = new ConfigurationClient(domainClient);
@@ -437,14 +407,11 @@ describe('ConfigurationClient', () => {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
         'You can not invoke removePortfolioStrategyMember method, because you have connected with account access ' +
-        'token. Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'token. Please use API access token from https://ec2-54-161-191-126.compute-1.amazonaws.com/token page to invoke this method.'
       );
     }
   });
 
-  /**
-   * @test {TradingClient#getSubscribers}
-   */
   it('should retrieve CopyFactory subscribers from API', async () => {
     let expected = [{
       _id: 'e8867baa-5ec2-45ae-9930-4d5cea18d0d6',
@@ -475,9 +442,6 @@ describe('ConfigurationClient', () => {
     }, true);
   });
   
-  /**
-     * @test {TradingClient#getSubscribers}
-     */
   it('should not retrieve subscribers from API with account token', async () => {
     domainClient = new DomainClient(httpClient, 'token');
     copyFactoryClient = new ConfigurationClient(domainClient);
@@ -487,8 +451,7 @@ describe('ConfigurationClient', () => {
     } catch (error) {
       error.name.should.equal('MethodAccessError');
       error.message.should.equal(
-        'You can not invoke getSubscribers method, because you have connected with account access token. ' +
-          'Please use API access token from https://app.metaapi.cloud/token page to invoke this method.'
+        'You can not invoke getSubscribers method, because you have connected with account access token. '
       );
     }
   });
