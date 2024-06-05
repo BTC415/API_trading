@@ -3,12 +3,12 @@ module.exports = mongoose => {
         _id: {
             type: String,
             required: true,
-            unique: true
+
         },
         name: String,
         description: {type: String, default: ''},
         reservedMarginFraction: Number,
-        phoneNumbers: [],
+        phoneNumbers: [Number],
         minTradeAmount: {type: Number, default: 0},
         closeOnly: {type:String, default: 'immediately'},
         riskLimits: [{

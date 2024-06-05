@@ -29,10 +29,26 @@ module.exports = app => {
 
     //Update Portfolio Strategy
     router.delete("/get-portfolio-strategies/:strategyId", configuration.deletePortfolioStrategy)
-    app.use("/api/configuration", router);
     
     //Update Portfolio Member Strategy
     router.delete("/get-portfolio-strategies/:strategyId/Member/:strategyMemberId", configuration.deletePortfolioMemberStrategy)
+    
+    // Get Portfolio Strategies
+    router.get("/get-subscribers", configuration.getSubscribers)
+  
+    // Get Portfolio Strategy
+    router.get("/get-subscribers/:subscriberId", configuration.getSubscriber)
+
+    //Update Portfolio Strategy
+    router.put("/get-subscribers/:subscriberId", configuration.updateSubscriber)
+
+    //Update Portfolio Strategy
+    router.delete("/get-subscribers/:subscriberId", configuration.deleteSubscriber)
+    
+    //Update Portfolio Member Strategy
+    router.delete("/get-subscribers/:subscriberId/Member/:strategyId", configuration.deleteSubscription)
+
+
     app.use("/api/configuration", router);
   };
   
