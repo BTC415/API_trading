@@ -1,6 +1,6 @@
 module.exports = mongoose => {
     var schema = mongoose.Schema({
-        id: {
+        _id: {
             type: String,
             required: true,
             unique: true
@@ -10,7 +10,7 @@ module.exports = mongoose => {
         skipPendingOrders: { type: Boolean, default: false },
         accountId: {type: String, default: ''},
         commissionScheme: {
-            type: String,
+            type: {type:String, default: ''},
             billingPeriod: { type: String, default: 'week' },
             commissionRate: { type: Number, default: 0 }
         },
@@ -35,16 +35,23 @@ module.exports = mongoose => {
                 openPositionFollowingTimeGapInMinutes: Number
             }
         },
-        riskLimits: [],
+        riskLimits: [{
+            type: {type: String, default: 'day'},
+            applyTo: {type: String, default: 'balance-difference'},
+            maxAbsoluteRisk: Number,
+            maxRelativeRisk: Number,
+            closePositions: {type: Boolean, default: false},
+            startTime: String,
+        }],
         maxStopLoss: {
             value: Number,
             units: String
         },
         maxLeverage: {type: Number, default: undefined},
-        symbolMapping: {
+        symbolMapping: [{
             to: String,
             from: String
-        },
+        }],
         tradeSizeScaling: {
             mode: String,
             tradeVolumne: Number,
@@ -55,7 +62,7 @@ module.exports = mongoose => {
         },
         copyStopLoss: Boolean,
         copyTakeProfit: Boolean,
-        allowedSides: [],
+        allowedSides: {type: [String], default: ["all"]},
         minTradeVolume: Number,
         maxTradeVolume: Number,
         signalDelay: {
@@ -63,8 +70,8 @@ module.exports = mongoose => {
             maxinSeconds: Number
         },
         magicFilter: {
-            included: [],
-            excluded: []
+            included: [String],
+            excluded: [String]
         },
         equityCurveFilter: {
             period: Number,
@@ -75,19 +82,14 @@ module.exports = mongoose => {
             maxAbsoluteDrawdown: Number,
             action: String
         },
-        symbolsTrade: [],
+        symbolsTrade: [String],
         timeSettings: {
             maxRelativeDrawdown: Number,
             maxAbsoluteDrawdown: Number,
             expirePendingOrderSignals: Boolean
         },
-        closeOnRemovalMode: String
-    });
-
-    schema.method("toJSON", function() {
-        const { __v, _id, ...object } = this.toObject();
-        object.id = _id;
-        return object;
+        closeOnRemovalMode: String,
+        removedState: {type: Boolean, default: false}
     });
 
     const Strategy = mongoose.model("Strategy", schema); // Changed model name to "Strategy"

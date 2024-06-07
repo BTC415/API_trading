@@ -7,46 +7,46 @@ module.exports = app => {
     router.get("/unused-strategy-id", configuration.generateStrategyId);
 
     // Get Strategies
-    router.get("/get-strategies", configuration.getStrategies)
+    router.get("/strategies", configuration.getStrategies)
 
     // Get Strategy
-    router.get("/get-strategies/:strategyId", configuration.getStrategy)
+    router.get("/strategies/:strategyId", configuration.getStrategy)
 
     //Update Strategy
-    router.put("/get-strategies/:strategyId", configuration.updateStrategy)
+    router.put("/strategies/:strategyId", configuration.updateStrategy)
 
-    //Update Strategy
-    router.delete("/get-strategies/:strategyId", configuration.deleteStrategy)
+    //Delete Strategy
+    router.delete("/strategies/:strategyId", configuration.deleteStrategy)
     
     // Get Portfolio Strategies
-    router.get("/get-portfolio-strategies", configuration.getPortfolioStrategies)
+    router.get("/portfolio-strategies", configuration.getPortfolioStrategies)
   
     // Get Portfolio Strategy
-    router.get("/get-portfolio-strategies/:strategyId", configuration.getPortfolioStrategy)
+    router.get("/portfolio-strategies/:strategyId", configuration.getPortfolioStrategy)
 
     //Update Portfolio Strategy
-    router.put("/get-portfolio-strategies/:strategyId", configuration.updatePortfolioStrategy)
+    router.put("/portfolio-strategies/:strategyId", configuration.updatePortfolioStrategy)
 
-    //Update Portfolio Strategy
-    router.delete("/get-portfolio-strategies/:strategyId", configuration.deletePortfolioStrategy)
+    //Delete Portfolio Strategy
+    router.delete("/portfolio-strategies/:strategyId", configuration.deletePortfolioStrategy)
     
-    //Update Portfolio Member Strategy
-    router.delete("/get-portfolio-strategies/:strategyId/Member/:strategyMemberId", configuration.deletePortfolioMemberStrategy)
+    //Delete Portfolio Member Strategy
+    router.delete("/portfolio-strategies/:strategyId/member/:strategyMemberId", configuration.deletePortfolioMemberStrategy)
     
     // Get Portfolio Strategies
-    router.get("/get-subscribers", configuration.getSubscribers)
+    router.get("/subscribers", configuration.getSubscribers)
   
     // Get Portfolio Strategy
-    router.get("/get-subscribers/:subscriberId", configuration.getSubscriber)
+    router.get("/subscribers/:subscriberId", configuration.getSubscriber)
 
     //Update Portfolio Strategy
-    router.put("/get-subscribers/:subscriberId", configuration.updateSubscriber)
+    router.put("/subscribers/:subscriberId", configuration.updateSubscriber)
 
-    //Update Portfolio Strategy
-    router.delete("/get-subscribers/:subscriberId", configuration.deleteSubscriber)
+    //Delete Portfolio Strategy
+    router.delete("/subscribers/:subscriberId", configuration.deleteSubscriber)
     
-    //Update Portfolio Member Strategy
-    router.delete("/get-subscribers/:subscriberId/Member/:strategyId", configuration.deleteSubscription)
+    //Delete Portfolio Member Strategy
+    router.delete("/subscribers/:subscriberId/subscription/:strategyId", configuration.deleteSubscription)
 
 
     app.use("/api/configuration", router);

@@ -19,23 +19,30 @@ module.exports = mongoose => {
             reverse: { type: Boolean, default: false },
             reduceCorrelations: {type: String, default: undefined},
             symbolFilter: {
-                included: [],
-                excluded: []
+                included: [String],
+                excluded: [String]
             },
             newsFilter: {
                 breakingNewsFilter: {
-                    priorities: [],
+                    priorities: [String],
                     closePositionTimeGapInMinutes: Number,
                     openPositionFollowingTimeGapInMinutes: Number
                 },
                 calendarNewsFilter: {
-                    priorities: [],
+                    priorities: [String],
                     closePositionTimeGapInMinutes: Number,
                     openPositionPrecedingTimeGapInMinutes: Number,
                     openPositionFollowingTimeGapInMinutes: Number
                 }
             },
-            riskLimits: [],
+            riskLimits: [{
+                type: {type: String, default: 'day'},
+                applyTo: {type: String, default: 'balance-difference'},
+                maxAbsoluteRisk: Number,
+                maxRelativeRisk: Number,
+                closePositions: {type: Boolean, default: false},
+                startTime: String,
+            }],
             maxStopLoss: {
                 value: Number,
                 units: String
@@ -55,7 +62,7 @@ module.exports = mongoose => {
             },
             copyStopLoss: Boolean,
             copyTakeProfit: Boolean,
-            allowedSides: [],
+            allowedSides: [String],
             minTradeVolume: Number,
             maxTradeVolume: Number,
             signalDelay: {
@@ -63,9 +70,10 @@ module.exports = mongoose => {
                 maxinSeconds: Number
             },
             closeOnRemovalMode: String,
+            removedState: {type: Boolean, default: false}
         }],
         commissionScheme: {
-            type: String,
+            type: {type:String, default: ""},
             billingPeriod: { type: String, default: 'week' },
             commissionRate: { type: Number, default: 0 }
         },
@@ -74,23 +82,30 @@ module.exports = mongoose => {
         reverse: { type: Boolean, default: false },
         reduceCorrelations: {type: String, default: undefined},
         symbolFilter: {
-            included: [],
-            excluded: []
+            included: [String],
+            excluded: [String]
         },
         newsFilter: {
             breakingNewsFilter: {
-                priorities: [],
+                priorities: [String],
                 closePositionTimeGapInMinutes: Number,
                 openPositionFollowingTimeGapInMinutes: Number
             },
             calendarNewsFilter: {
-                priorities: [],
+                priorities: [String],
                 closePositionTimeGapInMinutes: Number,
                 openPositionPrecedingTimeGapInMinutes: Number,
                 openPositionFollowingTimeGapInMinutes: Number
             }
         },
-        riskLimits: [],
+        riskLimits: [{
+            type: {type: String, default: 'day'},
+            applyTo: {type: String, default: 'balance-difference'},
+            maxAbsoluteRisk: Number,
+            maxRelativeRisk: Number,
+            closePositions: {type: Boolean, default: false},
+            startTime: String,
+        }],
         maxStopLoss: {
             value: Number,
             units: String
@@ -110,7 +125,7 @@ module.exports = mongoose => {
         },
         copyStopLoss: Boolean,
         copyTakeProfit: Boolean,
-        allowedSides: [],
+        allowedSides: [String],
         minTradeVolume: Number,
         maxTradeVolume: Number,
         signalDelay: {
@@ -118,7 +133,8 @@ module.exports = mongoose => {
             maxinSeconds: Number
         },
         platformCommissionRate: {type: Number, default: undefined},
-        closeOnRemovalMode: String
+        closeOnRemovalMode: String,
+        removedState: {type: Boolean, default: false}
     });
 
     const PortfolioStrategy = mongoose.model("PortfolioStrategy", schema); // Changed model name to "PortfolioStrategy"

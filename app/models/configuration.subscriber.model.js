@@ -6,7 +6,6 @@ module.exports = mongoose => {
 
         },
         name: String,
-        description: {type: String, default: ''},
         reservedMarginFraction: Number,
         phoneNumbers: [Number],
         minTradeAmount: {type: Number, default: 0},
@@ -22,7 +21,7 @@ module.exports = mongoose => {
         maxLeverage: {type: Number, default: undefined},
         copyStopLoss: {type: Boolean, default: true},
         copyTakeProfit: {type: Boolean, default: true},
-        allowedSides: [],
+        allowedSides: {type: [String], default: ["all"]},
         minTradeVolume: Number,
         maxTradeVolume: Number,
         signalDelay: {
@@ -91,7 +90,9 @@ module.exports = mongoose => {
                 mininSeconds: Number,
                 maxinSeconds: Number
             },
+            removedState: {type: Boolean, default: false}
         }],
+        removedState: {type: Boolean, default: false}
     });
 
     const Subscriber = mongoose.model("Subscriber", schema); // Changed model name to "Subscriber"
