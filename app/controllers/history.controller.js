@@ -1,10 +1,5 @@
 const jwtEncode = require('jwt-encode')
 const db = require("../models");
-// const Strategy = db.strategies
-// const PortfolioStrategy = db.portfolioStrategies
-// const Subscriber = db.subscribers
-// const ChatUser = db.chatusers
-// const Chat = db.chats
 const Transaction = db.transactionfields;
 const secret = 'secret';
 const crypto = require('crypto');
