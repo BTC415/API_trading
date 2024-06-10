@@ -2,9 +2,11 @@ const jwtEncode = require('jwt-encode')
 const db = require("../models");
 const Strategy = db.strategies
 const PortfolioStrategy = db.portfolioStrategies
+const Master = db.masters
 const Subscriber = db.subscribers
 const secret = 'secret';
 const crypto = require('crypto');
+const exp = require('constants');
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -31,6 +33,28 @@ function deleteItemInObjects(array, itemToDelete) {
     });
 }
 
+//Save Master Strategy
+exports.saveMasterStrategy = async (req, res) => {
+    try {
+        console.log("save master");
+        const request = req.body;
+        console.log("accountId:", req.accountId);
+        const isMaster = await Master.findOne({accountId: accountId});
+        if (!isMaster) {
+            const newMaster = new Master(request);
+            console.log('newMaster------------->', newMaster);
+            await newMaster.save();
+            console.log('saved');
+            return res.stataus(2000).json({message: "Master Account successfully saved!"})
+        }
+        else {
+            console.log('404 Errror').json({message: "Error! Already Exist Same Account."})
+        }
+    } catch (e) {
+        console.log(e)
+        return res.status(500).json({message: "An Error Occured!"});
+    }
+}
 
 //Generate New Strategy
 exports.generateStrategyId = async (req, res) => {

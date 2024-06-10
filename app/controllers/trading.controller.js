@@ -1,6 +1,7 @@
 const jwtEncode = require('jwt-encode')
 const db = require("../models");
 const TradingSignal = db.tradingSignals;
+const ExternalTradingSignal = db.externalSignals
 const secret = 'secret';
 const crypto = require('crypto');
 const { type } = require('os');
@@ -67,8 +68,57 @@ exports.getTradingSignals = async (req, res) => {
         if (isSubscriberId) {
             res.status(200).json(isSubscriberId);
         }
-        else res.status(404).json({message: "Subscriber id not founded."})
+        else res.status(404).json({message: "Subscriber id not founded."});
     } catch (e) {
+        console.log(e);
+        return res.status(500).json({message: "An Error Occured"});
+    }
+}
 
+exports.getExternalTradingSignals = async (req, res) => {
+    try {
+        const strategyId = req.params.strategyId;
+        console.log("strategyId", strategyId);
+        const isstrategyId = await TradingSignal.find({strategyId: strategyId});
+        if (isstrategyId) {
+            res.status(200).json(isstrategyId);
+        }
+        else res.status(404).json({message: "Strategy id not founded."});
+    } catch (e) {
+        console.log(e);
+        return res.status(500).json({message: "An Error Occured"});
+    }
+}
+
+exports.updateExternalTradingSignals = async (req, res) => {
+    try {
+        console.log("update Trading Signals")
+        const request = req.body;
+        const strategyId = req.params.strategyId
+        const id = req.params.id;
+        console.log("Id------------>", strategyId)
+        // console.log("request----------->", request)
+        const item = await ExternalTradingSignal.findOne({_id: id, strategyId: strategyId})
+        // request.riskLimits = Array.isArray(request.riskLimits) ? request.riskLimits : [request.riskLimits]
+        if(item) {
+            console.log("found", item)
+            ExternalTradingSignal.findByIdAndUpdate(id, request, { new: false }, (err, updatedDocument) => {
+                if (err) {
+                    // Handle the error, e.g., return an error response
+                    res.status(500).json({ error: e  });
+                    console.log(err)
+                } else {
+                    console.log("updated", updatedDocument)
+                    // Document updated successfully, return the updated document as the response
+                    res.status(200).json({message: 'Trading Signals saved Successfully'});
+                }
+            });
+        }
+        else {
+            console.log("strategynot font");
+            res.status(404).json({message: "Trading Signals not founded!"})
+        }
+    } catch (e) {
+        res.status(500).json({message: 'An Error Occurred', error: e})
     }
 }

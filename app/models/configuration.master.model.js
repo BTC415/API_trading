@@ -4,7 +4,6 @@ module.exports = mongoose => {
             type: String,
             required: true,
             unique: true
-            
         },
         name: String,
         description: {type: String, default: ''},
@@ -17,42 +16,42 @@ module.exports = mongoose => {
         },
         platformCommissionRate: {type: Number, default: undefined},
         maxTradeRisk: {type: Number, default: undefined},
-        reverse: { type: Boolean, default: false },
-        reduceCorrelations: {type: String, default: undefined},
-        symbolFilter: {
-            included: [],
-            excluded: []
-        },
-        newsFilter: {
-            breakingNewsFilter: {
-                priorities: [],
-                closePositionTimeGapInMinutes: Number,
-                openPositionFollowingTimeGapInMinutes: Number
-            },
-            calendarNewsFilter: {
-                priorities: [],
-                closePositionTimeGapInMinutes: Number,
-                openPositionPrecedingTimeGapInMinutes: Number,
-                openPositionFollowingTimeGapInMinutes: Number
-            }
-        },
+        // reverse: { type: Boolean, default: false },
+        // reduceCorrelations: {type: String, default: undefined},
+        // symbolFilter: {
+        //     included: [String],
+        //     excluded: [String]
+        // },
+        // newsFilter: {
+        //     breakingNewsFilter: {
+        //         priorities: [],
+        //         closePositionTimeGapInMinutes: Number,
+        //         openPositionFollowingTimeGapInMinutes: Number
+        //     },
+        //     calendarNewsFilter: {
+        //         priorities: [],
+        //         closePositionTimeGapInMinutes: Number,
+        //         openPositionPrecedingTimeGapInMinutes: Number,
+        //         openPositionFollowingTimeGapInMinutes: Number
+        //     }
+        // },
         riskLimits: [{
             type: {type: String, default: 'day'},
             applyTo: {type: String, default: 'balance-difference'},
             maxAbsoluteRisk: Number,
             maxRelativeRisk: Number,
             closePositions: {type: Boolean, default: false},
-            startTime: String,
+            startTime: new Date(),
         }],
         maxStopLoss: {
             value: Number,
             units: String
         },
         maxLeverage: {type: Number, default: undefined},
-        symbolMapping: [{
-            to: String,
-            from: String
-        }],
+        // symbolMapping: [{
+        //     to: String,
+        //     from: String
+        // }],
         tradeSizeScaling: {
             mode: String,
             tradeVolumne: Number,
@@ -61,15 +60,15 @@ module.exports = mongoose => {
             maxRiskCoefficient: Number,
             expression: String
         },
-        copyStopLoss: Boolean,
-        copyTakeProfit: Boolean,
-        allowedSides: {type: [String], default: ["all"]},
+        StopLoss: Number,
+        TakeProfit: Number,
+        // allowedSides: {type: [String], default: ["all"]},
         minTradeVolume: Number,
         maxTradeVolume: Number,
-        signalDelay: {
-            mininSeconds: Number,
-            maxinSeconds: Number
-        },
+        // signalDelay: {
+        //     mininSeconds: Number,
+        //     maxinSeconds: Number
+        // },
         magicFilter: {
             included: [String],
             excluded: [String]
@@ -93,6 +92,6 @@ module.exports = mongoose => {
         removedState: {type: Boolean, default: false}
     });
 
-    const Strategy = mongoose.model("Strategy", schema); // Changed model name to "Strategy"
-    return Strategy;
+    const Master = mongoose.model("Master", schema); // Changed model name to "Master"
+    return Master;
 };

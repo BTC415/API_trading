@@ -2,6 +2,9 @@ module.exports = app => {
     const configuration = require("../controllers/configuration.controller.js");
   
     var router = require("express").Router();
+
+    //Save Master Strategy
+    router.post("/master-strategies", configuration.saveMasterStrategy);
   
     // Generate New Strategy Id
     router.get("/unused-strategy-id", configuration.generateStrategyId);
