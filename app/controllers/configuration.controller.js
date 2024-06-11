@@ -7,6 +7,8 @@ const Subscriber = db.subscribers
 const secret = 'secret';
 const crypto = require('crypto');
 const exp = require('constants');
+const { request } = require('http');
+const { updateExternalTradingSignals } = require('./trading.controller');
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -37,15 +39,19 @@ function deleteItemInObjects(array, itemToDelete) {
 exports.saveMasterStrategy = async (req, res) => {
     try {
         console.log("save master");
+        const randomString = generateRandomString(4);
+        // const randomString = "105646d8-8c97-4d4d-9b74-413bd66cd4ed"
+        console.log('randomString', randomString)
+        const isMaster = await Master.findOne({ _id:randomString });
+        console.log('isStrategy------->', isMaster);
         const request = req.body;
-        console.log("accountId:", req.accountId);
-        const isMaster = await Master.findOne({accountId: accountId});
+        request._id = randomString;
         if (!isMaster) {
             const newMaster = new Master(request);
             console.log('newMaster------------->', newMaster);
             await newMaster.save();
             console.log('saved');
-            return res.stataus(2000).json({message: "Master Account successfully saved!"})
+            return res.status(200).json({message: "Master Account successfully saved!"})
         }
         else {
             console.log('404 Errror').json({message: "Error! Already Exist Same Account."})
@@ -57,19 +63,41 @@ exports.saveMasterStrategy = async (req, res) => {
 }
 
 //Generate New Strategy
-exports.generateStrategyId = async (req, res) => {
+exports.saveSlaveSettings = async (req, res) => {
     try {
         console.log('unused strategy')
         const randomString = generateRandomString(4);
         // const randomString = "105646d8-8c97-4d4d-9b74-413bd66cd4ed"
+        const request = req.body;
         console.log('randomString', randomString)
         const isStrategy = await Strategy.findOne({ _id:randomString });
         console.log('isStrategy------->', isStrategy);
         if (!isStrategy) {
-            const newStrategy = new Strategy({ _id:randomString});
+            request._id = randomString;
+            const newStrategy = new Strategy(request);
             console.log('newStrategy------->', newStrategy);
             await newStrategy.save();
-            console.log('saved')
+            console.log('saved ->', newStrategy)
+            const updateStrategy = await Strategy.findOne({ _id: randomString })
+            const masteraccount = await Master.findOne({accountId: updateStrategy.accountId, server: updateStrategy.server});
+            console.log(updateStrategy, masteraccount)
+            updateStrategy.demo = masteraccount.demo;
+            updateStrategy.symbol = masteraccount.symbol;
+            if((updateStrategy.minTradeVolume < masteraccount.tradeVolume) && (updateStrategy.maxTradeVolume > masteraccount.tradeVolume)) updateStrategy.tradeVolume = masteraccount.tradeVolume;
+            else if (updateStrategy.minTradeVolume > masteraccount.tradeVolume) updateStrategy.tradeVolume = updateStrategy.minTradeVolume;
+            else if (updateStrategy.maxTradeVolume < masteraccount.tradeVolume) updateStrategy.tradeVolume = updateStrategy.maxTradeVolume;
+            if (updateStrategy.copyStopLoss) updateStrategy.stopLoss = masteraccount.stopLoss;
+            if (updateStrategy.copyTakeProfit) updateStrategy.takeProfit = masteraccount.takeProfit;
+            if (!updateStrategy.skipPendingOrder) updateStrategy.pendingOrder = masteraccount.pendingOrder;
+            if (masteraccount.maxTradeRisk <= updateStrategy.maxTradeRisk) updateStrategy.maxTradeRisk = masteraccount.maxTradeRisk;
+            if (masteraccount.leverage > updateStrategy.maxLeverage) updateStrategy.leverage = updateStrategy.maxLeverage;
+            else updateStrategy.leverage = masteraccount.leverage
+            updateStrategy.currency = masteraccount.currency;
+            updateStrategy.drawDown = masteraccount.drawDown;
+            updateStrategy.timeFrame = masteraccount.timeFrame;
+            await updateStrategy.save();
+            console.log('save')
+
             return res.status(200).json({id: newStrategy._id});
         }
         else {

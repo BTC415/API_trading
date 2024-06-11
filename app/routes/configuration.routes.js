@@ -7,7 +7,7 @@ module.exports = app => {
     router.post("/master-strategies", configuration.saveMasterStrategy);
   
     // Generate New Strategy Id
-    router.get("/unused-strategy-id", configuration.generateStrategyId);
+    router.post("/register-account", configuration.saveSlaveSettings);
 
     // Get Strategies
     router.get("/strategies", configuration.getStrategies)

@@ -4,12 +4,13 @@ module.exports = mongoose => {
             type: String,
             required: true,
             unique: true
-            
+
         },
         name: String,
         description: {type: String, default: ''},
         skipPendingOrders: { type: Boolean, default: false },
         accountId: {type: String, default: ''},
+        slaveaccountId: {type: String, default: ''},
         commissionScheme: {
             type: {type:String, default: ''},
             billingPeriod: { type: String, default: 'week' },
@@ -48,7 +49,7 @@ module.exports = mongoose => {
             value: Number,
             units: String
         },
-        maxLeverage: {type: Number, default: undefined},
+        maxLeverage: {type: Number, default: 100},
         symbolMapping: [{
             to: String,
             from: String
@@ -61,11 +62,11 @@ module.exports = mongoose => {
             maxRiskCoefficient: Number,
             expression: String
         },
-        copyStopLoss: Boolean,
-        copyTakeProfit: Boolean,
+        copyStopLoss: {type: Boolean, default: true},
+        copyTakeProfit: {type: Boolean, default: true},
         allowedSides: {type: [String], default: ["all"]},
-        minTradeVolume: Number,
-        maxTradeVolume: Number,
+        minTradeVolume: {type: Number, default: 1},
+        maxTradeVolume: {type: Number, default: 1000},
         signalDelay: {
             mininSeconds: Number,
             maxinSeconds: Number
@@ -90,7 +91,23 @@ module.exports = mongoose => {
             expirePendingOrderSignals: Boolean
         },
         closeOnRemovalMode: String,
-        removedState: {type: Boolean, default: false}
+        removedState: {type: Boolean, default: false},
+        server: {type: String, default: "MT4"},
+        demo: {type: Boolean, default: false},
+        symbol: {type: String, default: 'EURUSD'},
+        currency: {type: String, default: 'USD'},
+        leverage: {type: Number, default: 1},
+        tradeVolume: Number,
+        stopLoss: Number,
+        takeProfit: Number,
+        pendingOrder: {
+            buyLimit: Number,
+            buyStop: Number,
+            sellLimit: Number,
+            sellStop: Number
+        },
+        drawDown: {type: Number, default: undefined},
+        timeFrame: {type: String, default: "1m"},
     });
 
     const Strategy = mongoose.model("Strategy", schema); // Changed model name to "Strategy"

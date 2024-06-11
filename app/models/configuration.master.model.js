@@ -5,93 +5,28 @@ module.exports = mongoose => {
             required: true,
             unique: true
         },
-        name: String,
+        name: {type: String, default: ''},
         description: {type: String, default: ''},
-        skipPendingOrders: { type: Boolean, default: false },
+        server: {type: String, default: "MT4"},
+        demo: {type: Boolean, default: false},
         accountId: {type: String, default: ''},
-        commissionScheme: {
-            type: {type:String, default: ''},
-            billingPeriod: { type: String, default: 'week' },
-            commissionRate: { type: Number, default: 0 }
+        symbol: {type: String, default: 'EURUSD'},
+        currency: {type: String, default: 'USD'},
+        leverage: {type: Number, default: 1},
+        tradeVolume: Number,
+        stopLoss: Number,
+        takeProfit: Number,
+        pendingOrder: {
+            buyLimit: Number,
+            buyStop: Number,
+            sellLimit: Number,
+            sellStop: Number
         },
-        platformCommissionRate: {type: Number, default: undefined},
         maxTradeRisk: {type: Number, default: undefined},
-        // reverse: { type: Boolean, default: false },
-        // reduceCorrelations: {type: String, default: undefined},
-        // symbolFilter: {
-        //     included: [String],
-        //     excluded: [String]
-        // },
-        // newsFilter: {
-        //     breakingNewsFilter: {
-        //         priorities: [],
-        //         closePositionTimeGapInMinutes: Number,
-        //         openPositionFollowingTimeGapInMinutes: Number
-        //     },
-        //     calendarNewsFilter: {
-        //         priorities: [],
-        //         closePositionTimeGapInMinutes: Number,
-        //         openPositionPrecedingTimeGapInMinutes: Number,
-        //         openPositionFollowingTimeGapInMinutes: Number
-        //     }
-        // },
-        riskLimits: [{
-            type: {type: String, default: 'day'},
-            applyTo: {type: String, default: 'balance-difference'},
-            maxAbsoluteRisk: Number,
-            maxRelativeRisk: Number,
-            closePositions: {type: Boolean, default: false},
-            startTime: new Date(),
-        }],
-        maxStopLoss: {
-            value: Number,
-            units: String
-        },
-        maxLeverage: {type: Number, default: undefined},
-        // symbolMapping: [{
-        //     to: String,
-        //     from: String
-        // }],
-        tradeSizeScaling: {
-            mode: String,
-            tradeVolumne: Number,
-            riskFraction: Number,
-            forceTinyTrades: Boolean,
-            maxRiskCoefficient: Number,
-            expression: String
-        },
-        StopLoss: Number,
-        TakeProfit: Number,
-        // allowedSides: {type: [String], default: ["all"]},
-        minTradeVolume: Number,
-        maxTradeVolume: Number,
-        // signalDelay: {
-        //     mininSeconds: Number,
-        //     maxinSeconds: Number
-        // },
-        magicFilter: {
-            included: [String],
-            excluded: [String]
-        },
-        equityCurveFilter: {
-            period: Number,
-            timeframe: String
-        },
-        drawdownFilter: {
-            maxRelativeDrawdown: Number,
-            maxAbsoluteDrawdown: Number,
-            action: String
-        },
-        symbolsTrade: [String],
-        timeSettings: {
-            maxRelativeDrawdown: Number,
-            maxAbsoluteDrawdown: Number,
-            expirePendingOrderSignals: Boolean
-        },
-        closeOnRemovalMode: String,
-        removedState: {type: Boolean, default: false}
+        drawDown: {type: Number, default: undefined},
+        timeFrame: {type: String, default: "1m"},
     });
 
-    const Master = mongoose.model("Master", schema); // Changed model name to "Master"
-    return Master;
+    const Masters = mongoose.model("Masters", schema); // Changed model name to "Master"
+    return Masters;
 };
