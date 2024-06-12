@@ -1,15 +1,13 @@
 module.exports = mongoose => {
     var schema = mongoose.Schema({
-        strategy: {
-            id: String,
-            name: String,
-        },
-        subscriberId: {type:String, default:"105646d8-8c97-4d4d-9b74-413bd66cd4ed"},
+        accountId: {type: String, default: ""},
+        subscriberId: {type:String, default:""},
         positionId: String,
         time: {type: Date, default: new Date()},
         symbol: {type: String, default: 'EURUSD'},
         type: {type: String, default: 'DEAL_TYPE_BUY'},
         side: {type: String, default: ''},
+        server: {type: String, default: "MT4"},
         openPrice: Number,
         stopLoss: Number,
         takeProfit: Number,

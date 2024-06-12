@@ -1,7 +1,8 @@
 const jwtEncode = require('jwt-encode')
 const db = require("../models");
 const TradingSignal = db.tradingSignals;
-const ExternalTradingSignal = db.externalSignals
+const ExternalTradingSignal = db.externalSignals;
+const Strategy = db.strategies;
 const secret = 'secret';
 const crypto = require('crypto');
 const { type } = require('os');
@@ -120,5 +121,49 @@ exports.updateExternalTradingSignals = async (req, res) => {
         }
     } catch (e) {
         res.status(500).json({message: 'An Error Occurred', error: e})
+    }
+}
+
+exports.removeExternalTradingSignals = async (req, res) => {
+    try {
+
+    } catch(e) {
+        console.log(e);
+        res.status(500).json({message: "An Error Occured!"});
+    }
+}
+
+exports.signalProcessing = async (req, res) => {
+    try {
+        console.log("signal processing")
+        const accountId = req.params.accountId;
+        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server} = req.body;
+        const followers = await Strategy.find({accountId: accountId, server: server})
+        console.log(followers)
+        followers.map((item, index) => {
+            const tradingSignal = new TradingSignal({accountId: accountId});
+            tradingSignal.subscriberId = item.subscriberId;
+            tradingSignal.positionId = positionId;
+            if (item.symbolMapping.from === symbol) tradingSignal.symbol = item.symbolMapping.to;
+            else tradingSignal.symbol = symbol;
+            tradingSignal.time = Date(time);
+            if (item.reverse === true) {
+                if (side === "buy") tradingSignal.side = 'sell';
+                else tradingSignal.side = 'buy';
+            }
+            else {
+                if (side === "buy") tradingSignal.side = 'sell';
+                else tradingSignal.side = 'buy';
+            }
+            tradingSignal.type = type;
+            tradingSignal.openPrice = openPrice;
+            if ((openPrice + item.stopLoss)>stopLoss) tradingSignal.stopLoss = openPrice + item.stopLoss;
+            else tradingSignal.stopLoss = stopLoss
+            
+        })
+        return res.status(200).json({message: "Okay"})
+    } catch(e) {
+        console.log(e);
+        res.status(500).json({message: "Internal Sever Error!"})
     }
 }

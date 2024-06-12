@@ -4,7 +4,6 @@ module.exports = mongoose => {
             type: String,
             required: true,
             unique: true
-
         },
         name: String,
         description: {type: String, default: ''},

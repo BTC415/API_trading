@@ -11,6 +11,7 @@ module.exports = mongoose => {
         stopLoss: Number,
         takeProfit: Number,
         openPrice: Number,
+        removedTime: {type: Date, default: new Date()}, 
     });
     
     schema.method("toJSON", function() {
