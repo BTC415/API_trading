@@ -42,7 +42,6 @@ module.exports = mongoose => {
             maxAbsoluteRisk: Number,
             maxRelativeRisk: Number,
             closePositions: {type: Boolean, default: false},
-            startTime: String,
         }],
         maxStopLoss: {
             value: Number,
@@ -64,7 +63,7 @@ module.exports = mongoose => {
         copyStopLoss: {type: Boolean, default: true},
         copyTakeProfit: {type: Boolean, default: true},
         allowedSides: {type: [String], default: ["all"]},
-        minTradeVolume: {type: Number, default: 1},
+        minTradeVolume: {type: Number, default: 0},
         maxTradeVolume: {type: Number, default: 1000},
         signalDelay: {
             mininSeconds: Number,
@@ -96,9 +95,10 @@ module.exports = mongoose => {
         symbol: {type: String, default: 'EURUSD'},
         currency: {type: String, default: 'USD'},
         leverage: {type: Number, default: 1},
-        tradeVolume: Number,
-        stopLoss: Number,
-        takeProfit: Number,
+        tradeVolume: {type: Number, default: 0},
+        stopLoss: {type: Number, default: 0},
+        takeProfit: {type: Number, default: 0},
+        balance: {type: Number, default: 0},
         pendingOrder: {
             buyLimit: Number,
             buyStop: Number,

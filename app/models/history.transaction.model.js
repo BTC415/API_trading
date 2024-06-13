@@ -31,7 +31,7 @@ module.exports = mongoose => {
         },
         positionId: String,
         slavePositionId: String,
-        improement: Number,
+        improvement: Number,
         providerCommission: Number,
         platformCommission: Number,
         incomingProviderCommission: Number,

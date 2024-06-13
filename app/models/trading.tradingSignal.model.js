@@ -3,6 +3,7 @@ module.exports = mongoose => {
         accountId: {type: String, default: ""},
         subscriberId: {type:String, default:""},
         positionId: String,
+        subscriberPositionId: String,
         time: {type: Date, default: new Date()},
         symbol: {type: String, default: 'EURUSD'},
         type: {type: String, default: 'DEAL_TYPE_BUY'},
@@ -14,7 +15,11 @@ module.exports = mongoose => {
         signalVolume: Number,
         subscriberVolume: Number,
         subscriberProfit: Number,
-        closeAfter: {type: Date, default: new Date()},
+        leverage: Number,
+        lotSize: {type: String, default: 'Standard'},
+        // pendingOrder: {},
+        timeFrame: {type: String, default: '1m'},
+        closeAfter: Date,
         closeOnly: Boolean,
     });
     

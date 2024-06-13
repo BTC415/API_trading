@@ -6,6 +6,7 @@ const Strategy = db.strategies;
 const secret = 'secret';
 const crypto = require('crypto');
 const { type } = require('os');
+const tradingExternalSignalModel = require('../models/trading.externalSignal.model');
 
 
 function generateRandomString(length) {
@@ -124,6 +125,17 @@ exports.updateExternalTradingSignals = async (req, res) => {
     }
 }
 
+function calculateTradeRisk(riskPercentage, accountBalance) {
+    // Convert risk percentage to decimal
+    let riskDecimal = riskPercentage / 100;
+    
+    // Calculate trade risk
+    let tradeRisk = riskDecimal * accountBalance;
+    
+    return tradeRisk;
+}
+
+
 exports.removeExternalTradingSignals = async (req, res) => {
     try {
 
@@ -137,29 +149,67 @@ exports.signalProcessing = async (req, res) => {
     try {
         console.log("signal processing")
         const accountId = req.params.accountId;
-        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server} = req.body;
+        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame, leverage, lotSize} = req.body;
         const followers = await Strategy.find({accountId: accountId, server: server})
         console.log(followers)
-        followers.map((item, index) => {
+        followers.map(async (item, index) => {
             const tradingSignal = new TradingSignal({accountId: accountId});
+            const isTradigSignal = true;
             tradingSignal.subscriberId = item.subscriberId;
             tradingSignal.positionId = positionId;
-            if (item.symbolMapping.from === symbol) tradingSignal.symbol = item.symbolMapping.to;
-            else tradingSignal.symbol = symbol;
+            tradingSignal.subscriberPositionId = positionId;
+            tradingSignal.timeFrame = timeFrame;
+            if (item.symbolFilter.include) {
+                if (item.symbolFilter.include.includes(symbol)) tradingSignal.symbol = symbol;
+                else isTradigSignal= false;
+            }
+            if (item.symbolFilter.exclude) {
+                if (!item.symbolFilter.exclude.includes(symbol)) tradingSignal.symbol = symbol;
+                else isTradigSignal= false;
+            }
+            // if (item.symbolMapping.from === symbol) tradingSignal.symbol = item.symbolMapping.to;
+            // else tradingSignal.symbol = symbol;
             tradingSignal.time = Date(time);
+            tradingSignal.type = type;
             if (item.reverse === true) {
                 if (side === "buy") tradingSignal.side = 'sell';
-                else tradingSignal.side = 'buy';
+                else if(side ==="sell") tradingSignal.side = 'buy';
             }
             else {
                 if (side === "buy") tradingSignal.side = 'sell';
                 else tradingSignal.side = 'buy';
             }
-            tradingSignal.type = type;
             tradingSignal.openPrice = openPrice;
-            if ((openPrice + item.stopLoss)>stopLoss) tradingSignal.stopLoss = openPrice + item.stopLoss;
-            else tradingSignal.stopLoss = stopLoss
-            
+            if (item.copyStopLoss){
+                if ((openPrice + item.maxStopLoss)>stopLoss) tradingSignal.stopLoss = openPrice + item.maxStopLoss;
+                else tradingSignal.stopLoss = stopLoss
+            }
+            else tradingSignal.stopLoss = openPrice + item.maxStopLoss;
+            if (item.copyTakeProfit) {
+                if ((openPrice + item.maxTakeProfit)<takeProfit) tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
+                else tradingSignal.takeProfit = takeProfit
+            }
+            else tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
+            // if (!item.skipPendingOrders) tradingSignal.pendingOrder = pendingOrder;
+            if (leverage>item.maxLeverage) tradingSignal.leverage = item.maxLeverage;
+            else tradingSignal.leverage = leverage;
+            // if (item.minTradeVolume>signalVolume) tradingSignal.signalVolume = item.minTradeVolume;
+            // else if (item.maxTradeVolume<signalVolume) tradingSignal.signalVolume = item.maxTradeVolume;
+            // else tradingSignal.signalVolume = item.maxTradeVolume;
+            tradingSignal.signalVolume =signalVolume;
+            tradingSignal.lotSize = lotSize;
+            let lotUnit = 100000;
+            if (lotSize === "mini") lotUnit = 10000;
+            if (lotSize === "micro") lotUnit = 1000;
+            if (lotSize === "nano") lotUnit = 100;
+            else lotUnit = 100000;
+            //calculatae subscriber volume
+            const subVolume = (item.balance * item.maxTradeRisk)/(signalVolume*leverage*lotUnit);
+            console.log("subvolume----------------------->", subVolume); 
+            tradingSignal.subscriberVolume = subVolume; 
+            await tradingSignal.save();
+            console.log("tradingSignal----------------------->", tradingSignal);
+            res.write(tradingSignal);
         })
         return res.status(200).json({message: "Okay"})
     } catch(e) {
