@@ -16,7 +16,7 @@ module.exports = mongoose => {
             commissionRate: { type: Number, default: 0 }
         },
         platformCommissionRate: {type: Number, default: undefined},
-        maxTradeRisk: {type: Number, default: undefined},
+        maxTradeRisk: {type: Number, default: 0},
         reverse: { type: Boolean, default: false },
         reduceCorrelations: {type: String, default: undefined},
         symbolFilter: {
@@ -36,13 +36,13 @@ module.exports = mongoose => {
                 openPositionFollowingTimeGapInMinutes: Number
             }
         },
-        riskLimits: [{
+        riskLimits: {
             type: {type: String, default: 'day'},
             applyTo: {type: String, default: 'balance-difference'},
             maxAbsoluteRisk: Number,
             maxRelativeRisk: Number,
             closePositions: {type: Boolean, default: false},
-        }],
+        },
         maxStopLoss: {
             value: Number,
             units: String

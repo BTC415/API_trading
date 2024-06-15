@@ -152,10 +152,11 @@ exports.signalProcessing = async (req, res) => {
         const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame, leverage, lotSize} = req.body;
         const followers = await Strategy.find({accountId: accountId, server: server})
         console.log(followers)
-        followers.map(async (item, index) => {
+        followers.forEach(async item => {
             const tradingSignal = new TradingSignal({accountId: accountId});
             const isTradigSignal = true;
-            tradingSignal.subscriberId = item.subscriberId;
+            tradingSignal.subscriberId = item.slaveaccountId;
+            console.log('subscriberId', item)
             tradingSignal.positionId = positionId;
             tradingSignal.subscriberPositionId = positionId;
             tradingSignal.timeFrame = timeFrame;
@@ -171,13 +172,13 @@ exports.signalProcessing = async (req, res) => {
             // else tradingSignal.symbol = symbol;
             tradingSignal.time = Date(time);
             tradingSignal.type = type;
-            if (item.reverse === true) {
+            if (item.reverse) {
                 if (side === "buy") tradingSignal.side = 'sell';
                 else if(side ==="sell") tradingSignal.side = 'buy';
             }
             else {
-                if (side === "buy") tradingSignal.side = 'sell';
-                else tradingSignal.side = 'buy';
+                if (side === "buy") tradingSignal.side = 'buy';
+                else tradingSignal.side = 'sell';
             }
             tradingSignal.openPrice = openPrice;
             if (item.copyStopLoss){
@@ -203,14 +204,33 @@ exports.signalProcessing = async (req, res) => {
             if (lotSize === "micro") lotUnit = 1000;
             if (lotSize === "nano") lotUnit = 100;
             else lotUnit = 100000;
+            console.log("lotUnit", lotUnit, item.balance, item.maxTradeRisk)
             //calculatae subscriber volume
-            const subVolume = (item.balance * item.maxTradeRisk)/(signalVolume*leverage*lotUnit);
+            let subVolume = (item.balance * item.maxTradeRisk)/(signalVolume*leverage*lotUnit);
             console.log("subvolume----------------------->", subVolume); 
+            // Adjusting subscriber volume based on riskLimit
+            if (item.riskLimits.maxAbsoluteRisk > item.riskLimits.maxRelativeRisk) {
+                // If maxAbsoluteRisk is higher than maxRelativeRisk
+                if (subVolume > item.riskLimits.maxAbsoluteRisk) {
+                    // Decrease subscriber volume if it exceeds maxAbsoluteRisk
+                    subVolume = item.riskLimits.maxAbsoluteRisk;
+                    console.log("Adjusted subscriber volume to maxAbsoluteRisk");
+                }
+            } else if (item.riskLimits.maxAbsoluteRisk < item.riskLimits.maxRelativeRisk) {
+                // If maxRelativeRisk is higher than maxAbsoluteRisk
+                if (subVolume > item.riskLimits.maxRelativeRisk) {
+                    // Decrease subscriber volume if it exceeds maxRelativeRisk
+                    subVolume = item.riskLimits.maxRelativeRisk;
+                    console.log("Adjusted subscriber volume to maxRelativeRisk");
+                }
+            }
             tradingSignal.subscriberVolume = subVolume; 
-            await tradingSignal.save();
             console.log("tradingSignal----------------------->", tradingSignal);
-            res.write(tradingSignal);
+            await tradingSignal.save();
+            const tradingSignalString = JSON.stringify(tradingSignal);
+            // res.write(tradingSignalString);
         })
+        // res.end();
         return res.status(200).json({message: "Okay"})
     } catch(e) {
         console.log(e);
