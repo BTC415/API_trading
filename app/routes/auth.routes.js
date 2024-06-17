@@ -2,7 +2,7 @@
 import { verifyUser } from '../utils/verifyToken.js'
 
 module.exports = app => {
-    const auth = require("../controllers/auth.meta.controller.js");
+    const auth = require("../controllers/auth.controller.js");
   
     var router = require("express").Router();
     
