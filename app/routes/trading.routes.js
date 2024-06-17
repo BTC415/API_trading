@@ -1,5 +1,6 @@
 
-import { verifyUser } from '../utils/verifyToken.js'
+// import { verifyUser } from '../utils/verifyToken.js'
+const { verifyUser } = require('../utils/verifyToken.js');
 module.exports = app => {
     const trading = require("../controllers/trading.controller.js");
   

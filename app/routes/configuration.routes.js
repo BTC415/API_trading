@@ -1,8 +1,11 @@
 
-import { verifyUser } from '../utils/verifyToken.js'
+// import { verifyUser } from '../utils/verifyToken.js'
+const { verifyUser } = require('../utils/verifyToken.js');
 
 module.exports = app => {
     const configuration = require("../controllers/configuration.controller.js");
+
+    // var verifyUser = require("../utils/verifyToken.js");
   
     var router = require("express").Router();
     
