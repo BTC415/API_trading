@@ -1,47 +1,7 @@
-// import jwt from 'jsonwebtoken'
-
-// export const verifyToken = (req, res,next) => {
-//    const {token} = req.header
-//    if (!token) {
-      
-//       return res.status(401).json({ success: false, message: "You are not authorize!" })
-//    }
-
-//    // if token is exist then verify the token
-//    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
-//       if (err) {
-//          return res.status(401).json({ success: false, message: "Token is invalid" })
-//       }
-//       req.user = user
-//       next()
-//    })
-// }
-
-
-// export const verifyUser = (req, res, next) => {
-//    const {id}=req.query
-//    verifyToken(req, res, next, () => {
-//       if ((":"+req.user.id) === req.query.id || req.user.role === 'admin') {
-//          next()
-//       } else {
-//          return res.status(401).json({ success: false, message: "You are not authenticated" })
-//       }
-//    })
-// }
-
-
-// export const verifyAdmin = (req, res, next) => {
-//    verifyToken(req, res, next, () => {
-//       if (req.user.role === 'admin') {
-//          next()
-//       } else {
-//          return res.status(401).json({ success: false, message: "You are not authorize" })
-//       }
-//    })
-// } 
-
-
 const jwt = require('jsonwebtoken');
+const db = require("../models");
+const Auth = db.authentications;
+const expirationTime = 2592000;
 
 const verifyToken = (req, res, next) => {
     const { token } = req.headers;
@@ -64,14 +24,20 @@ const setToken = (tokendata) => {
    return token;
 }
 
+
 const verifyUser = (req, res, next) => {
-    const { id } = req.query;
-    verifyToken(req, res, () => {
-        if (req.user.id === id || req.user.role === 'admin') {
+    verifyToken(req, res, async () => {
+      const isUser = await Auth.findOne({email: req.user.email, accountId: req.user.accountId})
+      if (isUser) {
+         const currentDate = Math.floor(Date.now() / 1000);
+         console.log(currentDate);
+         if (currentDate < req.user.exp){
             next();
-        } else {
-            return res.status(401).json({ success: false, message: "You are not authenticated" });
-        }
+         } else {
+            res.status(401).json({success: false, message: "Token is expired"})
+         }
+      }
+      else res.status(401).json({success: false, message: "You are not authenticated!"})
     });
 
 };

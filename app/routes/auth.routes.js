@@ -1,17 +1,13 @@
-
-import { verifyUser } from '../utils/verifyToken.js'
-
 module.exports = app => {
-    const auth = require("../controllers/auth.controller.js");
+  const auth = require("../controllers/auth.controller.js");
+
+  var router = require("express").Router();
   
-    var router = require("express").Router();
-    
-    router.post('/auth/:accountId', auth.login);
+  router.post('/auth/login', auth.login);
 
-    router.post('/auth/:accountId', auth.register);
+  router.post('/auth/register', auth.register);
 
-    router.post('/auth/:accountId', auth.logout);
+  router.post('/auth/logout', auth.logout);
 
-    app.use("/api", router);
-  };
-  
+  app.use("/api", router);
+};

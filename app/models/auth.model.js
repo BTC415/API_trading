@@ -1,10 +1,10 @@
 module.exports = mongoose => {
     var schema = mongoose.Schema({
-        accountId: [{
+        accountId: {
             type: String,
             required: true,
             default: ''
-        }],
+        },
         name: {
             type: String,
             default: '',
