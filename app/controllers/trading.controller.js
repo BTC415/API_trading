@@ -148,7 +148,8 @@ exports.removeExternalTradingSignals = async (req, res) => {
 exports.signalProcessing = async (req, res) => {
     try {
         console.log("signal processing")
-        const accountId = req.params.accountId;
+        const accountId = 
+        req.params.accountId;
         const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame, leverage, lotSize} = req.body;
         const followers = await Strategy.find({accountId: accountId, server: server})
         console.log(followers)
@@ -235,5 +236,102 @@ exports.signalProcessing = async (req, res) => {
     } catch(e) {
         console.log(e);
         res.status(500).json({message: "Internal Sever Error!"})
+    }
+}
+
+// Simulated market data
+let marketPrices = {
+    'BTCUSDT': 50000,
+    'ETHUSDT': 2000,
+    'EURUSD': 1.07
+  };
+  
+  // Function to update market prices
+  setInterval(() => {
+    marketPrices = {
+      'BTCUSDT': marketPrices['BTCUSDT'] + Math.floor(Math.random() * 100) - 50,
+      'ETHUSDT': marketPrices['ETHUSDT'] + Math.floor(Math.random() * 50) - 25,
+      'EURUSD': marketPrices['EURUSD'] + Math.random() * 0.05 - 0.025
+    };
+  }, 1000); // Update market prices every 1 second
+
+exports.orders = async (req, res) => {
+    try {
+        console.log("orders");
+        const  {symbol, orderType, volume, price, stopLoss, takeProfit, comment} = req.body;
+        if (!symbol || !orderType || !volume || !slippage || !stopLoss || !takeProfit) {
+            return res.status(400).json({ error: 'Missing required parameters' });
+          }
+        
+          if (orderType !== 'buy') {
+            return res.status(400).json({ error: 'Only buy orders are supported' });
+          }
+        
+          if (volume <= 0) {
+            return res.status(400).json({ error: 'Volume must be a positive number' });
+          }
+        
+          if (slippage < 0 || stopLoss < 0 || takeProfit < 0) {
+            return res.status(400).json({ error: 'Slippage, stop loss, and take profit must be positive numbers' });
+          }
+          
+          // Validate input parameters
+          if (!symbol || !orderType || !volume || !price || !slippage || !stopLoss || !takeProfit) {
+            return res.status(400).json({ error: 'Missing required parameters' });
+          }
+        
+          // Continuously monitor the market price
+          let benefit;
+          let executionPrice;
+          let tradeExecuted = false;
+        
+          const interval = setInterval(() => {
+            const currentPrice = marketPrices[symbol];
+            if (!currentPrice) {
+              clearInterval(interval);
+              return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+            }
+        
+            // Apply slippage to the current price
+            const slippageAmount = currentPrice * (slippage / 100);
+            executionPrice = currentPrice + slippageAmount;
+        
+            // Check if the price has reached the take-profit or stop-loss level
+            if (orderType == "buy") {
+                if (executionPrice >= takeProfit) {
+                  benefit = (price - currentPrice) * volume;
+                  tradeExecuted = true;
+                  clearInterval(interval);
+                } else if (executionPrice <= stopLoss) {
+                  benefit = (currentPrice - price) * volume;
+                  tradeExecuted = true;
+                  clearInterval(interval);
+                }
+            }
+            else if (orderType == "sell") {
+                if (executionPrice >= takeProfit) {
+                  benefit = (currentPrice-price) * volume;
+                  tradeExecuted = true;
+                  clearInterval(interval);
+                } else if (executionPrice <= stopLoss) {
+                  benefit = (price-currentPrice) * volume;
+                  tradeExecuted = true;
+                  clearInterval(interval);
+                }
+            }
+            else if (orderType == "buy limit") {
+
+            }
+        
+            if (tradeExecuted) {
+              // Simulate the trade execution
+              console.log(`Executed a buy order for ${symbol} at ${executionPrice} with a volume of ${volume}. Benefit: ${benefit}`);
+              res.json({ executionPrice, benefit });
+            }
+          }, 100); // Check the market price every 100 milliseconds
+
+    } catch (e) {
+        console.log(e);
+        return res.status(200).json({message: "Internal Server Error!"})
     }
 }
