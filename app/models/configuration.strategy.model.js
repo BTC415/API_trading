@@ -40,7 +40,9 @@ module.exports = mongoose => {
             type: {type: String, default: 'day'},
             applyTo: {type: String, default: 'balance-difference'},
             maxAbsoluteRisk: Number,
-            maxRelativeRisk: Number,
+            maxAbsoluteProfit: Number,
+            dailyRisk: Number,
+            dailyProfit: Number,
             closePositions: {type: Boolean, default: false},
         },
         maxStopLoss: {
@@ -99,6 +101,8 @@ module.exports = mongoose => {
         stopLoss: {type: Number, default: 0},
         takeProfit: {type: Number, default: 0},
         balance: {type: Number, default: 0},
+        profit: {type: Number, default: 0},
+        dailyProfit: {type: Number, default: 0},
         pendingOrder: {
             buyLimit: Number,
             buyStop: Number,
