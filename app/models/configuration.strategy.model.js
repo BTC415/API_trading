@@ -111,6 +111,16 @@ module.exports = mongoose => {
         },
         drawDown: {type: Number, default: undefined},
         timeFrame: {type: String, default: "1m"},
+        closeVolume: {type:Number, default: 0},
+        isPendingOrder: {type: Boolean, default: false},
+        closeAll: {type: String, default: 'Nothing'},
+        specificPrice: {
+            breakEven: {type: Boolean, default: false},
+            moveStopLoss: {type: Number, default: 0},
+            moveTakeProfit: {type: Number, default: 0},
+            entryPoint: {type:Number, default: 0}
+        },
+        isStopLoss: {type: Boolean, default:true}
     });
 
     const Strategy = mongoose.model("Strategy", schema); // Changed model name to "Strategy"

@@ -173,6 +173,9 @@ exports.signalProcessing = async (req, res) => {
             // if (item.symbolMapping.from === symbol) tradingSignal.symbol = item.symbolMapping.to;
             // else tradingSignal.symbol = symbol;
             tradingSignal.time = Date(time);
+            if (item.isPendingOrder && item.closeAll != "pendignOrder") {
+                const pendingOrder = item.pendingOrder;
+            }
             tradingSignal.type = type;
             if (item.reverse) {
                 if (side === "buy") tradingSignal.side = 'sell';
@@ -241,24 +244,36 @@ exports.signalProcessing = async (req, res) => {
 }
 
 // Simulated market data
-let marketPrices = {
+let marketBuyPrices = {
     'BTCUSDT': 50000,
     'ETHUSDT': 2000,
     'EURUSD': 1.07
 };
-let orderPrice;
+// Simulated market data
+let marketSellPrices = {
+    'BTCUSDT': 50000,
+    'ETHUSDT': 2000,
+    'EURUSD': 1.07
+};
+let buyPrice;
+let sellPrice;
 // Function to update market prices
 setInterval(() => {
-    marketPrices = {
-        'BTCUSDT': marketPrices['BTCUSDT'] + Math.floor(Math.random() * 100) - 50,
-        'ETHUSDT': marketPrices['ETHUSDT'] + Math.floor(Math.random() * 50) - 25,
-        'EURUSD': marketPrices['EURUSD'] + Math.random() * 0.000005-0.0000025
+    marketBuyPrices = {
+        'BTCUSDT': marketBuyPrices['BTCUSDT'] + Math.floor(Math.random() * 100) - 40,
+        'ETHUSDT': marketBuyPrices['ETHUSDT'] + Math.floor(Math.random() * 50) - 15,
+        'EURUSD': marketBuyPrices['EURUSD'] + Math.random() * 0.000005-0.000002
+    };
+    marketSellPrices = {
+        'BTCUSDT': marketBuyPrices['BTCUSDT'] + Math.floor(Math.random() * 100) - 50,
+        'ETHUSDT': marketBuyPrices['ETHUSDT'] + Math.floor(Math.random() * 50) - 25,
+        'EURUSD': marketBuyPrices['EURUSD'] + Math.random() * 0.000005-0.0000025
     };
 }, 1000); // Update market prices every 1 second
 
 async function closeTrade () {
     const closeState = await Strategy.find({});
-    setInterval(async () => {
+    const interval = setInterval(async () => {
         closeState.forEach(async item => {
             const trade = await Transaction.find({accountId: item.accountId, subscriberId: item.subscriberId, closed: false, symbol: item.symbol});
             let profit = 0;
@@ -283,13 +298,13 @@ async function closeTrade () {
     }, 1000)
 
 }
-close
+closeTrade();
 
 exports.orders = async (req, res) => {
     try {
         console.log("orders");
         const subscriberId = req.params.subscriberId;
-        const  {symbol, orderType, volume, price, slippage, stopLoss, takeProfit, comment, accountId } = req.body;
+        const  {symbol, orderType, volume, price, slippage, stopLoss, takeProfit, comment, accountId} = req.body;
         if (!symbol || !orderType || !volume || !slippage || !stopLoss || !takeProfit) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
@@ -325,20 +340,20 @@ exports.orders = async (req, res) => {
         if(strategy.removedState === false) {
 
             const interval = setInterval(async () => {
-                let currentPrice = marketPrices[symbol];
-                if (!currentPrice) {
-                    clearInterval(interval);
-                    return res.status(404).json({ error: `Symbol "${symbol}" not found` });
-                }
-                console.log(currentPrice);
-                    // Apply slippage to the current price
-                const slippageAmount = currentPrice * (slippage / 100);
-                executionPrice = currentPrice + slippageAmount;
-                console.log(slippageAmount, "----")
                 
                     // Check if the price has reached the take-profit or stop-loss level
                 if (orderType == "buy") {
                     console.log("orderPrice", orderPrice)
+                    let currentPrice = marketSellPrices[symbol];
+                    if (!currentPrice) {
+                        clearInterval(interval);
+                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                    }
+                    console.log(currentPrice);
+                        // Apply slippage to the current price
+                    const slippageAmount = currentPrice * (slippage / 100);
+                    executionPrice = currentPrice + slippageAmount;
+                    console.log(slippageAmount, "----")
                     if (executionPrice >= takeProfit) {
                         benefit = (currentPrice - orderPrice) * volume * 100000;
                         tradeExecuted = true;
@@ -350,6 +365,16 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "sell") {
+                    let currentPrice = marketBuyPrices[symbol];
+                    if (!currentPrice) {
+                        clearInterval(interval);
+                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                    }
+                    console.log(currentPrice);
+                        // Apply slippage to the current price
+                    const slippageAmount = currentPrice * (slippage / 100);
+                    executionPrice = currentPrice + slippageAmount;
+                    console.log(slippageAmount, "----")
                     if (executionPrice >= takeProfit) {
                         benefit = (orderPrice-currentPrice) * volume * 100000;
                         tradeExecuted = true;
@@ -361,6 +386,16 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "buy limit") {
+                    let currentPrice = marketSellPrices[symbol];
+                    if (!currentPrice) {
+                        clearInterval(interval);
+                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                    }
+                    console.log(currentPrice);
+                        // Apply slippage to the current price
+                    const slippageAmount = currentPrice * (slippage / 100);
+                    executionPrice = currentPrice + slippageAmount;
+                    console.log(slippageAmount, "----")
                     if (executionPrice <= price) {
                         benefit = (orderPrice - price) * volume * 100000;
                         tradeExecuted = true;
@@ -368,6 +403,16 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "sell limit") {
+                    let currentPrice = marketBuyPrices[symbol];
+                    if (!currentPrice) {
+                        clearInterval(interval);
+                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                    }
+                    console.log(currentPrice);
+                        // Apply slippage to the current price
+                    const slippageAmount = currentPrice * (slippage / 100);
+                    executionPrice = currentPrice + slippageAmount;
+                    console.log(slippageAmount, "----")
                     if (executionPrice >= price) {
                         benefit = (price - orderPrice) * volume * 100000;
                         tradeExecuted = true;
@@ -375,6 +420,16 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "buy stop") {
+                    let currentPrice = marketSellPrices[symbol];
+                    if (!currentPrice) {
+                        clearInterval(interval);
+                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                    }
+                    console.log(currentPrice);
+                        // Apply slippage to the current price
+                    const slippageAmount = currentPrice * (slippage / 100);
+                    executionPrice = currentPrice + slippageAmount;
+                    console.log(slippageAmount, "----")
                     if (executionPrice >= limitPrice) {
                         benefit = (price - limitPrice) * volume * 100000;
                         tradeExecuted = true;
@@ -382,6 +437,16 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "sell stop") {
+                    let currentPrice = marketBuyPrices[symbol];
+                    if (!currentPrice) {
+                        clearInterval(interval);
+                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                    }
+                    console.log(currentPrice);
+                        // Apply slippage to the current price
+                    const slippageAmount = currentPrice * (slippage / 100);
+                    executionPrice = currentPrice + slippageAmount;
+                    console.log(slippageAmount, "----")
                     if (executionPrice <= limitPrice) {
                         benefit = (limitPrice - price) * volume * 100000;
                         tradeExecuted = true;
