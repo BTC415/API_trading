@@ -173,7 +173,7 @@ exports.signalProcessing = async (req, res) => {
             // if (item.symbolMapping.from === symbol) tradingSignal.symbol = item.symbolMapping.to;
             // else tradingSignal.symbol = symbol;
             tradingSignal.time = Date(time);
-            if (item.isPendingOrder && item.closeAll != "pendignOrder") {
+            if (!item.skipPendingOrders && item.closeAll != "pendignOrder") {
                 const pendingOrder = item.pendingOrder;
             }
             tradingSignal.type = type;
@@ -187,13 +187,28 @@ exports.signalProcessing = async (req, res) => {
             }
             tradingSignal.openPrice = openPrice;
             if (item.copyStopLoss){
-                if ((openPrice + item.maxStopLoss)>stopLoss) tradingSignal.stopLoss = openPrice + item.maxStopLoss;
-                else tradingSignal.stopLoss = stopLoss
+                if (! item.specificPrice.breakEven) {
+                    if(item.specificPrice.moveStopLoss == 0){
+                        if ((openPrice + item.maxStopLoss)>stopLoss) tradingSignal.stopLoss = openPrice + item.maxStopLoss;
+                        else tradingSignal.stopLoss = stopLoss
+                    }
+                    else {
+                        if ((openPrice + item.maxStopLoss)>item.specificPrice.moveStopLoss) tradingSignal.stopLoss = openPrice + item.maxStopLoss;
+                        else tradingSignal.stopLoss = item.specificPrice.moveStopLoss
+                    }
+                }
+                else tradingSignal.stopLoss = openPrice;
             }
             else tradingSignal.stopLoss = openPrice + item.maxStopLoss;
             if (item.copyTakeProfit) {
-                if ((openPrice + item.maxTakeProfit)<takeProfit) tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
-                else tradingSignal.takeProfit = takeProfit
+                if (item.specificPrice.moveTakeProfit) {
+                    if ((openPrice + item.maxTakeProfit)<takeProfit) tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
+                    else tradingSignal.takeProfit = takeProfit
+                }
+                else {
+                    if ((openPrice + item.maxTakeProfit)>item.specificPrice.moveTakeProfit) tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
+                    else tradingSignal.takeProfit = item.specificPrice.moveTakeProfit
+                }
             }
             else tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
             // if (!item.skipPendingOrders) tradingSignal.pendingOrder = pendingOrder;
@@ -202,7 +217,8 @@ exports.signalProcessing = async (req, res) => {
             // if (item.minTradeVolume>signalVolume) tradingSignal.signalVolume = item.minTradeVolume;
             // else if (item.maxTradeVolume<signalVolume) tradingSignal.signalVolume = item.maxTradeVolume;
             // else tradingSignal.signalVolume = item.maxTradeVolume;
-            tradingSignal.signalVolume =signalVolume;
+            let volumeFactor = (1 - item.closeVolume);
+            tradingSignal.signalVolume =signalVolume * volumeFactor;
             tradingSignal.lotSize = lotSize;
             let lotUnit = 100000;
             if (lotSize === "mini") lotUnit = 10000;
@@ -331,8 +347,16 @@ exports.orders = async (req, res) => {
         let executionPrice;
         let tradeExecuted = false;
           // Set the first market price
-        if (!orderPrice) {
-          orderPrice = marketPrices[symbol];
+          if (!orderPrice) {
+            switch (orderType) {
+                case "sell":
+                case "sell limit":
+                case "sell stop":
+                    orderPrice = marketBuyPrices[symbol];
+                    break;
+                default:
+                    orderPrice = marketSellPrices[symbol];
+            }
         }
 
         const transaction = new Transaction({accountId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol, tickPrice: orderPrice, amount: volume, profit: benefit, closed: false})

@@ -25,8 +25,8 @@ module.exports = mongoose => {
         maxTradeRisk: {type: Number, default: undefined},
         drawDown: {type: Number, default: undefined},
         timeFrame: {type: String, default: "1m"},
-        closeVolume: {type:Number, default: 0},
-        isPendingOrder: {type: Boolean, default: false},
+        closeVolume: {type:Number, default: 0}, 
+        skipPendingOrders: { type: Boolean, default: false },
         closeAll: {type: String, default: 'Nothing'},
         specificPrice: {
             breakEven: {type: Boolean, default: false},

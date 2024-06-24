@@ -12,6 +12,9 @@ module.exports = app => {
 
     //Save Master Strategy
     router.post("/master-strategies", verifyUser, configuration.saveMasterStrategy);
+
+    //update Master Strategy
+    router.put("/master-strategies/:accountId", verifyUser, configuration.updateMasterStrategy)
   
     // Generate New Strategy Id
     router.post("/register-account", verifyUser, configuration.saveSlaveSettings);

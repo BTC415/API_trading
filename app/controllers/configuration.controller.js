@@ -9,6 +9,8 @@ const crypto = require('crypto');
 const exp = require('constants');
 const { request } = require('http');
 const { updateExternalTradingSignals } = require('./trading.controller');
+const { Stream } = require('stream');
+const { getAccountPath } = require('ethers/lib/utils');
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -61,6 +63,77 @@ exports.saveMasterStrategy = async (req, res) => {
         return res.status(500).json({message: "An Error Occured!"});
     }
 }
+
+//update master Strategy.
+exports.updateMasterStrategy = async (req, res) => {
+    try {
+        console.log("update Strategy")
+        const request = req.body;
+        const accountId = req.params.accountId
+        console.log("Id------------>", accountId)
+        // console.log("request----------->", request)
+        const item = await Master.findOne({accountId: accountId})
+        // request.riskLimits = Array.isArray(request.riskLimits) ? request.riskLimits : [request.riskLimits]
+        if(item) {
+            console.log("found", item)
+            Master.findByIdAndUpdate(accountId, request, { new: false }, (err, updatedDocument) => {
+                if (err) {
+                    // Handle the error, e.g., return an error response
+                    res.status(500).json({ error: e  });
+                    console.log(err)
+                } else {
+                    console.log("updated", updatedDocument)
+                    // Document updated successfully, return the updated document as the response
+                    compareStrategy(accountId);
+                    res.status(200).json({message: 'Master Setting updated Successfully'});
+                }
+            });
+        }
+        else {
+            console.log("strategynot font");
+            res.status(404).json({message: "Strategy not founded!"})
+        }
+    } catch (e) {
+        res.status(500).json({message: 'An Error Occurred', error: e})
+    }
+}
+
+async function compareStrategy (accountId) {
+    const masterStrategy = await Master.findOne({accountId: accountId});
+    if (masterStrategy) {
+        let slaveStrategy = await Strategy.find({accountId: accountId});
+        if (slaveStrategy) {
+            slaveStrategy.forEach(async item => {
+                let slave = item;
+                item.server = masterStrategy.server;
+                item.demo = masterStrategy.demo;
+                item.symbol = masterStrategy.symbol;
+                item.leverage = masterStrategy.leverage;
+                if((item.minTradeVolume < masterStrategy.tradeVolume) && (item.maxTradeVolume > masterStrategy.tradeVolume)) item.tradeVolume = masterStrategy.tradeVolume;
+                else if (item.minTradeVolume > masterStrategy.tradeVolume) item.tradeVolume = item.minTradeVolume;
+                else if (item.maxTradeVolume < masterStrategy.tradeVolume) item.tradeVolume = item.maxTradeVolume;
+                if (item.copyStopLoss) item.stopLoss = masterStrategy.stopLoss;
+                if (item.copyTakeProfit) item.takeProfit = masterStrategy.takeProfit;
+                if (!item.skipPendingOrder) item.pendingOrder = masterStrategy.pendingOrder;
+                if (masterStrategy.maxTradeRisk <= item.maxTradeRisk) item.maxTradeRisk = masterStrategy.maxTradeRisk;
+                if (masterStrategy.leverage > item.maxLeverage) item.leverage = item.maxLeverage;
+                else item.leverage = masterStrategy.leverage
+                item.currency = masterStrategy.currency;
+                item.drawDown = masterStrategy.drawDown;
+                item.timeFrame = masterStrategy.timeFrame;
+                item.closeVolume = masterStrategy.closeVolume;
+                item.closeAll = masterStrategy.closeAll;
+                item.specificPrice = masterStrategy.specificPrice;
+                item.isStopLoss = masterStrategy.isStopLoss;
+                await item.save();
+            })
+        }
+    }
+    // else {
+    //     return 
+    // }
+}
+
 
 //Generate New Strategy
 exports.saveSlaveSettings = async (req, res) => {
