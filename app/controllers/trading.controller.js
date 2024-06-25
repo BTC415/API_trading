@@ -149,10 +149,10 @@ exports.removeExternalTradingSignals = async (req, res) => {
 exports.signalProcessing = async (req, res) => {
     try {
         console.log("signal processing")
-        const accountId = 
+        // const accountId = 
         req.params.accountId;
-        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame, leverage, lotSize} = req.body;
-        const followers = await Strategy.find({accountId: accountId, server: server})
+        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame} = req.body;
+        const followers = await Strategy.find({strategyId: accountId, server: server})
         console.log(followers)
         followers.forEach(async item => {
             const tradingSignal = new TradingSignal({accountId: accountId});
@@ -173,7 +173,7 @@ exports.signalProcessing = async (req, res) => {
             // if (item.symbolMapping.from === symbol) tradingSignal.symbol = item.symbolMapping.to;
             // else tradingSignal.symbol = symbol;
             tradingSignal.time = Date(time);
-            if (!item.skipPendingOrders && item.closeAll != "pendignOrder") {
+            if (!item.skipPendingOrders && item.closeAll != "pendingOrder") {
                 const pendingOrder = item.pendingOrder;
             }
             tradingSignal.type = type;
@@ -227,7 +227,7 @@ exports.signalProcessing = async (req, res) => {
             else lotUnit = 100000;
             console.log("lotUnit", lotUnit, item.balance, item.maxTradeRisk)
             //calculatae subscriber volume
-            let subVolume = (item.balance * item.maxTradeRisk)/(signalVolume*leverage*lotUnit);
+            // let subVolume = (item.balance * item.maxTradeRisk)/(signalVolume*leverage*lotUnit);
             console.log("subvolume----------------------->", subVolume); 
             // Adjusting subscriber volume based on riskLimit
             if (item.riskLimits.maxAbsoluteRisk > item.riskLimits.maxRelativeRisk) {

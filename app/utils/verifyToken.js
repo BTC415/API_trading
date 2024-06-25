@@ -27,17 +27,18 @@ const setToken = (tokendata) => {
 
 const verifyUser = (req, res, next) => {
     verifyToken(req, res, async () => {
-      const isUser = await Auth.findOne({email: req.user.email, accountId: req.user.accountId})
-      if (isUser) {
-         const currentDate = Math.floor(Date.now() / 1000);
-         console.log(currentDate);
-         if (currentDate < req.user.exp){
-            next();
-         } else {
-            res.status(401).json({success: false, message: "Token is expired"})
-         }
-      }
-      else res.status(401).json({success: false, message: "You are not authenticated!"})
+        const isUser = await Auth.findOne({email: req.user.email, accountId: req.user.accountId})
+        if (isUser) {
+            const currentDate = Math.floor(Date.now() / 1000);
+            console.log(currentDate);
+            if (currentDate < req.user.exp){
+                req.user = isUser;
+                next();
+            } else {
+                res.status(401).json({success: false, message: "Token is expired"})
+            }
+        }
+        else res.status(401).json({success: false, message: "You are not authenticated!"})
     });
 
 };

@@ -72,7 +72,7 @@ exports.updateMasterStrategy = async (req, res) => {
         const accountId = req.params.accountId
         console.log("Id------------>", accountId)
         // console.log("request----------->", request)
-        const item = await Master.findOne({accountId: accountId})
+        const item = await Master.findOne({_id: accountId})
         // request.riskLimits = Array.isArray(request.riskLimits) ? request.riskLimits : [request.riskLimits]
         if(item) {
             console.log("found", item)
@@ -99,20 +99,27 @@ exports.updateMasterStrategy = async (req, res) => {
 }
 
 async function compareStrategy (accountId) {
-    const masterStrategy = await Master.findOne({accountId: accountId});
+    const masterStrategy = await Master.findOne({_id: accountId});
     if (masterStrategy) {
-        let slaveStrategy = await Strategy.find({accountId: accountId});
+        let slaveStrategy = await Strategy.find({strategyId: accountId});
         if (slaveStrategy) {
             slaveStrategy.forEach(async item => {
                 let slave = item;
                 item.server = masterStrategy.server;
                 item.demo = masterStrategy.demo;
-                item.symbol = masterStrategy.symbol;
                 item.leverage = masterStrategy.leverage;
+                if(!item.symbolFilter.include == []) {
+                    if (item.symbolFilter.included.includes(masterStrategy.symbol) || !item.symbolFilter.excluded.includes(item.symbol)) {
+                        item.symbol = masterStrategy.symbol;
+                    }
+                }
+                else if(!item.symbolFilter.excluded.includes(masterStrategy.symbol)) {
+                    item.symbol = masterStrategy.symbol;
+                }
                 if((item.minTradeVolume < masterStrategy.tradeVolume) && (item.maxTradeVolume > masterStrategy.tradeVolume)) item.tradeVolume = masterStrategy.tradeVolume;
                 else if (item.minTradeVolume > masterStrategy.tradeVolume) item.tradeVolume = item.minTradeVolume;
                 else if (item.maxTradeVolume < masterStrategy.tradeVolume) item.tradeVolume = item.maxTradeVolume;
-                if (item.copyStopLoss) item.stopLoss = masterStrategy.stopLoss;
+                if (item.copyStopLoss && masterStrategy.stopLoss < item.maxStopLoss) item.stopLoss = masterStrategy.stopLoss;
                 if (item.copyTakeProfit) item.takeProfit = masterStrategy.takeProfit;
                 if (!item.skipPendingOrder) item.pendingOrder = masterStrategy.pendingOrder;
                 if (masterStrategy.maxTradeRisk <= item.maxTradeRisk) item.maxTradeRisk = masterStrategy.maxTradeRisk;
@@ -134,6 +141,50 @@ async function compareStrategy (accountId) {
     // }
 }
 
+// Get Masters
+exports.getMasters = async (req, res) => {
+    try {
+        // console.log('dddd')
+        const {limit, offset, includeRemoved} = req.query;
+        console.log(limit, offset, includeRemoved)
+        let offset1 = 0;
+        if (offset) {
+            offset1 = offset;
+        } else {
+            offset1 = 0;
+        }
+        let limit_number = 1000;
+        if (limit) {
+            console.log('limit_number')
+            limit_number = limit;
+        } else {
+            limit_number = 1000;
+        }
+        let includeRemoved1 = "false";
+        if (includeRemoved) {
+            includeRemoved1 = includeRemoved;
+        } else {
+            includeRemoved1 = "false";
+        }
+        const skipValue = offset1 * limit_number;
+        console.log(skipValue, "this is skipvalue-------", includeRemoved1)
+        if (includeRemoved1 !== "false") {
+            console.log("true");
+            const strategies = await Master.find({}).skip(skipValue).limit(limit_number);
+            const updateStrategies = deleteItemInObjects(strategies, "removedState");
+            res.status(200).json(updateStrategies);
+        }
+        else {
+            console.log("false");
+            const strategies = await Strategy.find({removedState: false}).skip(skipValue).limit(limit_number);
+            const updateStrategies = deleteItemInObjects(strategies, "removedState");
+            res.status(200).json(updateStrategies);
+        }
+    } catch (e) {
+        res.status(500).json({message: 'An Error Occurred', error: e})
+    }
+}
+
 
 //Generate New Strategy
 exports.saveSlaveSettings = async (req, res) => {
@@ -147,19 +198,28 @@ exports.saveSlaveSettings = async (req, res) => {
         console.log('isStrategy------->', isStrategy);
         if (!isStrategy) {
             request._id = randomString;
+            request.slaveaccountId = req.user.accountId;
+            request.name = req.user.name;
             const newStrategy = new Strategy(request);
             console.log('newStrategy------->', newStrategy);
             await newStrategy.save();
             console.log('saved ->', newStrategy)
             const updateStrategy = await Strategy.findOne({ _id: randomString })
-            const masteraccount = await Master.findOne({accountId: updateStrategy.accountId, server: updateStrategy.server});
+            const masteraccount = await Master.findOne({strateyId: updateStrategy.strategyId, server: updateStrategy.server});
             console.log(updateStrategy, masteraccount)
             updateStrategy.demo = masteraccount.demo;
-            updateStrategy.symbol = masteraccount.symbol;
+            if(!updateStrategy.symbolFilter.include == []) {
+                if (updateStrategy.symbolFilter.included.includes(masteraccount.symbol) || !updateStrategy.symbolFilter.excluded.includes(updateStrategy.symbol)) {
+                    updateStrategy.symbol = masteraccount.symbol;
+                }
+            }
+            else if(!updateStrategy.symbolFilter.excluded.includes(masteraccount.symbol)) {
+                updateStrategy.symbol = masteraccount.symbol;
+            }
             if((updateStrategy.minTradeVolume < masteraccount.tradeVolume) && (updateStrategy.maxTradeVolume > masteraccount.tradeVolume)) updateStrategy.tradeVolume = masteraccount.tradeVolume;
             else if (updateStrategy.minTradeVolume > masteraccount.tradeVolume) updateStrategy.tradeVolume = updateStrategy.minTradeVolume;
             else if (updateStrategy.maxTradeVolume < masteraccount.tradeVolume) updateStrategy.tradeVolume = updateStrategy.maxTradeVolume;
-            if (updateStrategy.copyStopLoss) updateStrategy.stopLoss = masteraccount.stopLoss;
+            if (updateStrategy.copyStopLoss && masteraccount.stopLoss < updateStrategy.maxStopLoss) updateStrategy.stopLoss = masteraccount.stopLoss;
             if (updateStrategy.copyTakeProfit) updateStrategy.takeProfit = masteraccount.takeProfit;
             if (!updateStrategy.skipPendingOrder) updateStrategy.pendingOrder = masteraccount.pendingOrder;
             if (masteraccount.maxTradeRisk <= updateStrategy.maxTradeRisk) updateStrategy.maxTradeRisk = masteraccount.maxTradeRisk;
@@ -168,6 +228,10 @@ exports.saveSlaveSettings = async (req, res) => {
             updateStrategy.currency = masteraccount.currency;
             updateStrategy.drawDown = masteraccount.drawDown;
             updateStrategy.timeFrame = masteraccount.timeFrame;
+            updateStrategy.closeVolume = masterStrategy.closeVolume;
+            updateStrategy.closeAll = masterStrategy.closeAll;
+            updateStrategy.specificPrice = masterStrategy.specificPrice;
+            updateStrategy.isStopLoss = masterStrategy.isStopLoss;
             await updateStrategy.save();
             console.log('save')
 
