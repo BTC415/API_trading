@@ -42,9 +42,9 @@ module.exports = mongoose => {
         symbol: {type: String, default: 'EURUSD'},
         currency: {type: String, default: 'USD'},
         leverage: {type: Number, default: 1},
-        tradeVolume: {type: Number, default: 0},
-        stopLoss: {type: Number, default: 0},
-        takeProfit: {type: Number, default: 0},
+        tradeVolume: {type: Number, default: 0.01},
+        stopLoss: {type: String, default: "0"},
+        takeProfit: {type: String, default: "0"},
         balance: {type: Number, required: true},
         profit: {type: Number, default: 0},
         dailyProfit: {type: Number, default: 0},
@@ -65,7 +65,8 @@ module.exports = mongoose => {
             moveTakeProfit: {type: Number, default: 0},
             entryPoint: {type:Number, default: 0}
         },
-        isStopLoss: {type: Boolean, default:true}
+        isStopLoss: {type: Boolean, default:true},
+        trailing: {type:Boolean, default: false}
             // accountId: {type: String, default: ''},
         // }],    
     });

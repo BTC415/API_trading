@@ -149,13 +149,12 @@ exports.removeExternalTradingSignals = async (req, res) => {
 exports.signalProcessing = async (req, res) => {
     try {
         console.log("signal processing")
-        // const accountId = 
-        req.params.accountId;
+        const accountId = req.params.accountId;
         const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame} = req.body;
         const followers = await Strategy.find({strategyId: accountId, server: server})
         console.log(followers)
         followers.forEach(async item => {
-            const tradingSignal = new TradingSignal({accountId: accountId});
+            const tradingSignal = new TradingSignal({strategyId: accountId, server: server});
             const isTradigSignal = true;
             tradingSignal.subscriberId = item.slaveaccountId;
             console.log('subscriberId', item)
@@ -170,13 +169,21 @@ exports.signalProcessing = async (req, res) => {
                 if (!item.symbolFilter.exclude.includes(symbol)) tradingSignal.symbol = symbol;
                 else isTradigSignal= false;
             }
+            if (!item.skipPendingOrders && item.closeAll != "pendingOrder") {
+                // const pendingOrder = item.pendingOrder;
+                tradingSignal.type = type;
+            }
+            else {
+                if (type == "market") {
+                    tradingSignal.type = type;
+                }
+                else {
+                    isTradigSignal = false;
+                }
+            }
             // if (item.symbolMapping.from === symbol) tradingSignal.symbol = item.symbolMapping.to;
             // else tradingSignal.symbol = symbol;
             tradingSignal.time = Date(time);
-            if (!item.skipPendingOrders && item.closeAll != "pendingOrder") {
-                const pendingOrder = item.pendingOrder;
-            }
-            tradingSignal.type = type;
             if (item.reverse) {
                 if (side === "buy") tradingSignal.side = 'sell';
                 else if(side ==="sell") tradingSignal.side = 'buy';
@@ -189,28 +196,28 @@ exports.signalProcessing = async (req, res) => {
             if (item.copyStopLoss){
                 if (! item.specificPrice.breakEven) {
                     if(item.specificPrice.moveStopLoss == 0){
-                        if ((openPrice + item.maxStopLoss)>stopLoss) tradingSignal.stopLoss = openPrice + item.maxStopLoss;
+                        if (item.maxStopLoss>extractNumbers(stopLoss)[0]) tradingSignal.stopLoss = item.maxStopLoss.toString();
                         else tradingSignal.stopLoss = stopLoss
                     }
                     else {
-                        if ((openPrice + item.maxStopLoss)>item.specificPrice.moveStopLoss) tradingSignal.stopLoss = openPrice + item.maxStopLoss;
-                        else tradingSignal.stopLoss = item.specificPrice.moveStopLoss
+                        if ((item.maxStopLoss)>item.specificPrice.moveStopLoss) tradingSignal.stopLoss = item.maxStopLoss.toString();
+                        else tradingSignal.stopLoss = item.specificPrice.moveStopLoss.toString();
                     }
                 }
-                else tradingSignal.stopLoss = openPrice;
+                else tradingSignal.stopLoss = "0";
             }
-            else tradingSignal.stopLoss = openPrice + item.maxStopLoss;
+            else tradingSignal.stopLoss = item.maxStopLoss.toString();
             if (item.copyTakeProfit) {
                 if (item.specificPrice.moveTakeProfit) {
-                    if ((openPrice + item.maxTakeProfit)<takeProfit) tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
+                    if (item.maxTakeProfit<extractNumbers(takeProfit)[0]) tradingSignal.takeProfit = item.maxTakeProfit.toString();
                     else tradingSignal.takeProfit = takeProfit
                 }
                 else {
-                    if ((openPrice + item.maxTakeProfit)>item.specificPrice.moveTakeProfit) tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
-                    else tradingSignal.takeProfit = item.specificPrice.moveTakeProfit
+                    if (item.maxTakeProfit>item.specificPrice.moveTakeProfit) tradingSignal.takeProfit = item.maxTakeProfit.toString();
+                    else tradingSignal.takeProfit = item.specificPrice.moveTakeProfit.toString();
                 }
             }
-            else tradingSignal.takeProfit = openPrice + item.maxTakeProfit;
+            else tradingSignal.takeProfit =  item.maxTakeProfit.toString();
             // if (!item.skipPendingOrders) tradingSignal.pendingOrder = pendingOrder;
             if (leverage>item.maxLeverage) tradingSignal.leverage = item.maxLeverage;
             else tradingSignal.leverage = leverage;
@@ -218,7 +225,8 @@ exports.signalProcessing = async (req, res) => {
             // else if (item.maxTradeVolume<signalVolume) tradingSignal.signalVolume = item.maxTradeVolume;
             // else tradingSignal.signalVolume = item.maxTradeVolume;
             let volumeFactor = (1 - item.closeVolume);
-            tradingSignal.signalVolume =signalVolume * volumeFactor;
+            tradingSignal.signalVolume =signalVolume;
+            let subVolume = item.tradeVolume * volumeFactor;
             tradingSignal.lotSize = lotSize;
             let lotUnit = 100000;
             if (lotSize === "mini") lotUnit = 10000;
@@ -316,6 +324,14 @@ async function closeTrade () {
 }
 closeTrade();
 
+function extractNumbers(str) {
+    // Use a regular expression to find all real numbers in the string
+    const numbers = str.match(/\b\d+(\.\d+)?\b/g);
+  
+    // Convert the extracted strings to actual numbers
+    return numbers ? numbers.map(Number) : [];
+}
+
 exports.orders = async (req, res) => {
     try {
         console.log("orders");
@@ -323,7 +339,7 @@ exports.orders = async (req, res) => {
         const  {symbol, orderType, volume, price, slippage, stopLoss, takeProfit, comment, accountId} = req.body;
         if (!symbol || !orderType || !volume || !slippage || !stopLoss || !takeProfit) {
             return res.status(400).json({ error: 'Missing required parameters' });
-        }
+        } 
     
     //   if (orderType !== 'buy') {
     //     return res.status(400).json({ error: 'Only buy orders are supported' });
@@ -343,28 +359,56 @@ exports.orders = async (req, res) => {
         }
     
         // Continuously monitor the market price
-        let benefit;
-        let executionPrice;
-        let tradeExecuted = false;
-          // Set the first market price
-          if (!orderPrice) {
-            switch (orderType) {
-                case "sell":
-                case "sell limit":
-                case "sell stop":
-                    orderPrice = marketBuyPrices[symbol];
-                    break;
-                default:
-                    orderPrice = marketSellPrices[symbol];
-            }
-        }
 
         const transaction = new Transaction({accountId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol, tickPrice: orderPrice, amount: volume, profit: benefit, closed: false})
         const strategy = strategy.findOne({accountId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol});
+        
         if(strategy.removedState === false) {
-
+            let stopLoss = 0;
+            let takeProfit = 0;
+            if (strategy.stopLoss.includes("%")) {
+                stopLoss = takeProfit * extractNumbers(strategy.stopLoss)[0];
+            }
+            else stopLoss = extractNumbers(strategy.stopLoss)[0];
+            if (strategy.takeProfit.includes("%")) {
+                takeProfit = stopLoss * extractNumbers(strategy.takeProfit)[0];
+            }
+            else takeProfit = extractNumbers(strategy.takeProfit)[0];
+            let trailing = strategy.trailing;
+            let benefit;
+            let executionPrice;
+            let tradeExecuted = false;
+              // Set the first market price
+              if (!orderPrice) {
+                switch (orderType) {
+                    case "sell":
+                    case "sell limit":
+                    case "sell stop":
+                        orderPrice = marketBuyPrices[symbol];
+                        stopLoss = orderPrice - stopLoss;
+                        takeProfit = orderPrice + takeProfit;
+                        break;
+                    default:
+                        orderPrice = marketSellPrices[symbol];
+                        stopLoss = orderPrice + stopLoss;
+                        takeProfit = orderPrice - takeProfit;
+                }
+            }
+            let previousPrice = orderPrice
             const interval = setInterval(async () => {
-                
+                if (trailing) {
+                    if(currentPrice > previousPrice ) {
+                        if (orderType == "buy" || orderType == "buy limit" || orderType == "buy stop"){
+                            stopLoss = currentPrice + strategy.stopLoss;
+                            takeProfit = currentPrice - strategy.takeProfit;
+                        }
+                        else {
+                            stopLoss = currentPrice - strategy.stopLoss;
+                            takeProfit = currentPrice + strategy.takeProfit;
+                        }
+                        previousPrice = currentPrice;
+                    }
+                }
                     // Check if the price has reached the take-profit or stop-loss level
                 if (orderType == "buy") {
                     console.log("orderPrice", orderPrice)

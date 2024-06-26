@@ -1,6 +1,6 @@
 module.exports = mongoose => {
     var schema = mongoose.Schema({
-        accountId: {type: String, default: ""},
+        strategyId: {type: String, default: ""},
         subscriberId: {type:String, default:""},
         positionId: String,
         subscriberPositionId: String,
@@ -10,8 +10,8 @@ module.exports = mongoose => {
         side: {type: String, default: ''},
         server: {type: String, default: "MT4"},
         openPrice: Number,
-        stopLoss: Number,
-        takeProfit: Number,
+        stopLoss: String,
+        takeProfit: String,
         signalVolume: Number,
         subscriberVolume: Number,
         subscriberProfit: Number,
