@@ -150,14 +150,15 @@ exports.signalProcessing = async (req, res) => {
     try {
         console.log("signal processing")
         const accountId = req.params.accountId;
-        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame} = req.body;
+        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame, lotSize} = req.body;
+        console.log('accountId', accountId, server)
         const followers = await Strategy.find({strategyId: accountId, server: server})
         console.log(followers)
         followers.forEach(async item => {
             const tradingSignal = new TradingSignal({strategyId: accountId, server: server});
             const isTradigSignal = true;
             tradingSignal.subscriberId = item.slaveaccountId;
-            console.log('subscriberId', item)
+            console.log('subscriberId', tradingSignal.subscriberId)
             tradingSignal.positionId = positionId;
             tradingSignal.subscriberPositionId = positionId;
             tradingSignal.timeFrame = timeFrame;
@@ -219,8 +220,9 @@ exports.signalProcessing = async (req, res) => {
             }
             else tradingSignal.takeProfit =  item.maxTakeProfit.toString();
             // if (!item.skipPendingOrders) tradingSignal.pendingOrder = pendingOrder;
-            if (leverage>item.maxLeverage) tradingSignal.leverage = item.maxLeverage;
-            else tradingSignal.leverage = leverage;
+            console.log(item.maxLeverage)
+            if (item.leverage > item.maxLeverage) {tradingSignal.leverage = item.maxLeverage;}
+            else tradingSignal.leverage = item.leverage;
             // if (item.minTradeVolume>signalVolume) tradingSignal.signalVolume = item.minTradeVolume;
             // else if (item.maxTradeVolume<signalVolume) tradingSignal.signalVolume = item.maxTradeVolume;
             // else tradingSignal.signalVolume = item.maxTradeVolume;
@@ -277,7 +279,7 @@ let marketBuyPrices = {
 let marketSellPrices = {
     'BTCUSDT': 50000,
     'ETHUSDT': 2000,
-    'EURUSD': 1.07
+    'EURUSD': 1.06998
 };
 let buyPrice;
 let sellPrice;
@@ -322,9 +324,10 @@ async function closeTrade () {
     }, 1000)
 
 }
-closeTrade();
+// closeTrade();
 
-function extractNumbers(str) {
+function extractNumbers(input) {
+    const str = String(input)
     // Use a regular expression to find all real numbers in the string
     const numbers = str.match(/\b\d+(\.\d+)?\b/g);
   
@@ -359,43 +362,50 @@ exports.orders = async (req, res) => {
         }
     
         // Continuously monitor the market price
+        const strategy = await Strategy.findOne({strategyId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol});
 
+        let stop_loss = stopLoss;
+        let take_profit = takeProfit;
+        if (strategy.stopLoss.includes("%")) {
+            stop_loss = extractNumbers(strategy.takeProfit)[0] * extractNumbers(strategy.stopLoss)[0];
+        }
+        else stop_loss = extractNumbers(strategy.stopLoss)[0];
+        if (strategy.takeProfit.includes("%")) {
+            take_profit = extractNumbers(strategy.stopLoss)[0] * extractNumbers(strategy.takeProfit)[0];
+        }
+        else take_profit = extractNumbers(strategy.takeProfit)[0];
+
+        let orderPrice;
+          // Set the first market price
+          if (!orderPrice) {
+            switch (orderType) {
+                case "sell":
+                case "sell limit":
+                case "sell stop":
+                    orderPrice = marketBuyPrices[symbol];
+                    stop_loss = orderPrice - stopLoss;
+                    take_profit = orderPrice + takeProfit;
+                    break;
+                default:
+                    orderPrice = marketSellPrices[symbol];
+                    stop_loss = orderPrice - stopLoss;
+                    take_profit = orderPrice + takeProfit;
+            }
+        }
+        let benefit;
         const transaction = new Transaction({accountId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol, tickPrice: orderPrice, amount: volume, profit: benefit, closed: false})
-        const strategy = strategy.findOne({accountId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol});
         
         if(strategy.removedState === false) {
-            let stopLoss = 0;
-            let takeProfit = 0;
-            if (strategy.stopLoss.includes("%")) {
-                stopLoss = takeProfit * extractNumbers(strategy.stopLoss)[0];
-            }
-            else stopLoss = extractNumbers(strategy.stopLoss)[0];
-            if (strategy.takeProfit.includes("%")) {
-                takeProfit = stopLoss * extractNumbers(strategy.takeProfit)[0];
-            }
-            else takeProfit = extractNumbers(strategy.takeProfit)[0];
             let trailing = strategy.trailing;
-            let benefit;
             let executionPrice;
             let tradeExecuted = false;
-              // Set the first market price
-              if (!orderPrice) {
-                switch (orderType) {
-                    case "sell":
-                    case "sell limit":
-                    case "sell stop":
-                        orderPrice = marketBuyPrices[symbol];
-                        stopLoss = orderPrice - stopLoss;
-                        takeProfit = orderPrice + takeProfit;
-                        break;
-                    default:
-                        orderPrice = marketSellPrices[symbol];
-                        stopLoss = orderPrice + stopLoss;
-                        takeProfit = orderPrice - takeProfit;
-                }
-            }
             let previousPrice = orderPrice
+            let currentPrice;
             const interval = setInterval(async () => {
+                if (orderType == "buy" || orderType == "buy limit" || orderType == "buy stop"){
+                    currentPrice = marketSellPrices[symbol];
+                }
+                else currentPrice = marketBuyPrices[symbol];
                 if (trailing) {
                     if(currentPrice > previousPrice ) {
                         if (orderType == "buy" || orderType == "buy limit" || orderType == "buy stop"){
@@ -412,7 +422,6 @@ exports.orders = async (req, res) => {
                     // Check if the price has reached the take-profit or stop-loss level
                 if (orderType == "buy") {
                     console.log("orderPrice", orderPrice)
-                    let currentPrice = marketSellPrices[symbol];
                     if (!currentPrice) {
                         clearInterval(interval);
                         return res.status(404).json({ error: `Symbol "${symbol}" not found` });
@@ -433,7 +442,6 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "sell") {
-                    let currentPrice = marketBuyPrices[symbol];
                     if (!currentPrice) {
                         clearInterval(interval);
                         return res.status(404).json({ error: `Symbol "${symbol}" not found` });
@@ -454,7 +462,6 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "buy limit") {
-                    let currentPrice = marketSellPrices[symbol];
                     if (!currentPrice) {
                         clearInterval(interval);
                         return res.status(404).json({ error: `Symbol "${symbol}" not found` });
@@ -471,7 +478,6 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "sell limit") {
-                    let currentPrice = marketBuyPrices[symbol];
                     if (!currentPrice) {
                         clearInterval(interval);
                         return res.status(404).json({ error: `Symbol "${symbol}" not found` });
@@ -488,7 +494,6 @@ exports.orders = async (req, res) => {
                     }
                 }
                 else if (orderType == "buy stop") {
-                    let currentPrice = marketSellPrices[symbol];
                     if (!currentPrice) {
                         clearInterval(interval);
                         return res.status(404).json({ error: `Symbol "${symbol}" not found` });
@@ -498,14 +503,13 @@ exports.orders = async (req, res) => {
                     const slippageAmount = currentPrice * (slippage / 100);
                     executionPrice = currentPrice + slippageAmount;
                     console.log(slippageAmount, "----")
-                    if (executionPrice >= limitPrice) {
-                        benefit = (price - limitPrice) * volume * 100000;
+                    if (executionPrice >= price) {
+                        benefit = (orderPrice - price) * volume * 100000;
                         tradeExecuted = true;
                         clearInterval(interval);
                     }
                 }
                 else if (orderType == "sell stop") {
-                    let currentPrice = marketBuyPrices[symbol];
                     if (!currentPrice) {
                         clearInterval(interval);
                         return res.status(404).json({ error: `Symbol "${symbol}" not found` });
@@ -515,8 +519,8 @@ exports.orders = async (req, res) => {
                     const slippageAmount = currentPrice * (slippage / 100);
                     executionPrice = currentPrice + slippageAmount;
                     console.log(slippageAmount, "----")
-                    if (executionPrice <= limitPrice) {
-                        benefit = (limitPrice - price) * volume * 100000;
+                    if (executionPrice <= price) {
+                        benefit = (price - orderPrice) * volume * 100000;
                         tradeExecuted = true;
                         clearInterval(interval);
                     }
