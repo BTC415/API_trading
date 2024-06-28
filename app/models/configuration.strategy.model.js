@@ -66,7 +66,8 @@ module.exports = mongoose => {
             entryPoint: {type:Number, default: 0}
         },
         isStopLoss: {type: Boolean, default:true},
-        trailing: {type:Boolean, default: false}
+        trailing: {type:Boolean, default: false},
+        lotSize: {type: Number, default: 100000}
             // accountId: {type: String, default: ''},
         // }],    
     });
