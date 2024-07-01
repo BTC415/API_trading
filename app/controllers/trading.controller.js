@@ -150,7 +150,7 @@ exports.signalProcessing = async (req, res) => {
     try {
         console.log("signal processing")
         const accountId = req.params.accountId;
-        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame, lotSize} = req.body;
+        const {time, symbol, type, side, openPrice, positionId, stopLoss, takeProfit, signalVolume, server, timeFrame, lotSize, demo, slipPage} = req.body;
         console.log('accountId', accountId, server)
         const followers = await Strategy.find({strategyId: accountId, server: server})
         console.log(followers)
@@ -162,6 +162,7 @@ exports.signalProcessing = async (req, res) => {
             tradingSignal.positionId = positionId;
             tradingSignal.subscriberPositionId = positionId;
             tradingSignal.timeFrame = timeFrame;
+            tradingSignal.demo = demo;
             if (item.symbolFilter.include) {
                 if (item.symbolFilter.include.includes(symbol)) tradingSignal.symbol = symbol;
                 else isTradigSignal= false;
@@ -184,16 +185,19 @@ exports.signalProcessing = async (req, res) => {
             }
             // if (item.symbolMapping.from === symbol) tradingSignal.symbol = item.symbolMapping.to;
             // else tradingSignal.symbol = symbol;
-            tradingSignal.time = Date(time);
             if (item.reverse) {
                 if (side === "buy") tradingSignal.side = 'sell';
                 else if(side ==="sell") tradingSignal.side = 'buy';
+                else tradingSignal.side = side;
             }
             else {
                 if (side === "buy") tradingSignal.side = 'buy';
-                else tradingSignal.side = 'sell';
+                else if(side ==="sell") tradingSignal.side = 'sell';
+                else tradingSignal.side = side;
             }
+            tradingSignal.time = Date(time);
             tradingSignal.openPrice = openPrice;
+            tradingSignal.slippage = slipPage;
             if (item.copyStopLoss){
                 if (! item.specificPrice.breakEven) {
                     if(item.specificPrice.moveStopLoss == 0){
@@ -227,35 +231,41 @@ exports.signalProcessing = async (req, res) => {
             // else if (item.maxTradeVolume<signalVolume) tradingSignal.signalVolume = item.maxTradeVolume;
             // else tradingSignal.signalVolume = item.maxTradeVolume;
             let volumeFactor = (1 - item.closeVolume);
-            tradingSignal.signalVolume =signalVolume;
-            let subVolume = item.tradeVolume * volumeFactor;
-            tradingSignal.lotSize = lotSize;
+            // tradingSignal.signalVolume =signalVolume;
+            // let subVolume = item.tradeVolume * volumeFactor;
             let lotUnit = 100000;
             if (lotSize === "mini") lotUnit = 10000;
             if (lotSize === "micro") lotUnit = 1000;
             if (lotSize === "nano") lotUnit = 100;
             else lotUnit = 100000;
+            tradingSignal.lotSize = lotUnit;
             console.log("lotUnit", lotUnit, item.balance, item.maxTradeRisk)
             //calculatae subscriber volume
             // let subVolume = (item.balance * item.maxTradeRisk)/(signalVolume*leverage*lotUnit);
-            console.log("subvolume----------------------->", subVolume); 
+            // console.log("subvolume----------------------->", subVolume); 
             // Adjusting subscriber volume based on riskLimit
-            if (item.riskLimits.maxAbsoluteRisk > item.riskLimits.maxRelativeRisk) {
-                // If maxAbsoluteRisk is higher than maxRelativeRisk
-                if (subVolume > item.riskLimits.maxAbsoluteRisk) {
-                    // Decrease subscriber volume if it exceeds maxAbsoluteRisk
-                    subVolume = item.riskLimits.maxAbsoluteRisk;
-                    console.log("Adjusted subscriber volume to maxAbsoluteRisk");
-                }
-            } else if (item.riskLimits.maxAbsoluteRisk < item.riskLimits.maxRelativeRisk) {
-                // If maxRelativeRisk is higher than maxAbsoluteRisk
-                if (subVolume > item.riskLimits.maxRelativeRisk) {
-                    // Decrease subscriber volume if it exceeds maxRelativeRisk
-                    subVolume = item.riskLimits.maxRelativeRisk;
-                    console.log("Adjusted subscriber volume to maxRelativeRisk");
-                }
-            }
-            tradingSignal.subscriberVolume = subVolume; 
+            // if (item.riskLimits.maxAbsoluteRisk > item.riskLimits.maxRelativeRisk) {
+            //     // If maxAbsoluteRisk is higher than maxRelativeRisk
+            //     if (subVolume > item.riskLimits.maxAbsoluteRisk) {
+            //         // Decrease subscriber volume if it exceeds maxAbsoluteRisk
+            //         subVolume = item.riskLimits.maxAbsoluteRisk;
+            //         console.log("Adjusted subscriber volume to maxAbsoluteRisk");
+            //     }
+            // } else if (item.riskLimits.maxAbsoluteRisk < item.riskLimits.maxRelativeRisk) {
+            //     // If maxRelativeRisk is higher than maxAbsoluteRisk
+            //     if (subVolume > item.riskLimits.maxRelativeRisk) {
+            //         // Decrease subscriber volume if it exceeds maxRelativeRisk
+            //         subVolume = item.riskLimits.maxRelativeRisk;
+            //         console.log("Adjusted subscriber volume to maxRelativeRisk");
+            //     }
+            // }
+            if (item.tradeVolume !== 0)
+                tradingSignal.subscriberVolume = item.signalVolume*volumeFactor; 
+            else if (signalVolume > item.maxTradeVolume)
+                tradingSignal.subscriberVolume = item.maxTradeVolume*volumeFactor;
+            else if (signalVolume < item.minTradeVolume)
+                tradingSignal.subscriberVolume = item.minTradeVolume*volumeFactor;
+            else tradingSignal.subscriberVolume = signalVolume*volumeFactor;
             console.log("tradingSignal----------------------->", tradingSignal);
             await tradingSignal.save();
             const tradingSignalString = JSON.stringify(tradingSignal);
@@ -302,7 +312,7 @@ async function closeTrade () {
     const interval = setInterval(async () => {
         closeState.forEach(async item => {
             const trade = await Transaction.find({accountId: item.accountId, subscriberId: item.subscriberId, closed: false, symbol: item.symbol});
-            let profit = 0;
+            let  profit = 0;
             let dailyProfit = 0;
             const currentime = new Date;
             trade.forEach( it => {
@@ -335,12 +345,235 @@ function extractNumbers(input) {
     return numbers ? numbers.map(Number) : [];
 }
 
+async function order (subscriberId, symbol, orderType, volume, openPrice, slipPage, stopLoss, takeProfit, comment, accountId) {
+    
+    let stop_loss = stopLoss;
+    let take_profit = takeProfit;
+    let orderPrice;
+        // Set the first market price
+        if (!orderPrice) {
+        switch (orderType) {
+            case "sell":
+            case "sell limit":
+            case "sell stop":
+                orderPrice = marketBuyPrices[symbol];
+                // stop_loss = orderPrice - stopLoss;
+                // take_profit = orderPrice + takeProfit;
+                break;
+            default:
+                orderPrice = marketSellPrices[symbol];
+                // stop_loss = orderPrice - stopLoss;
+                // take_profit = orderPrice + takeProfit;
+        }
+    }
+    let benefit = 0;
+    console.log(subscriberId)
+    const strategy = await Strategy.findOne({strategyId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol});
+    if(strategy.removedState === false) {
+    const tradSignal = await TradingSignal.findOne({strategyId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol});
+    const transaction = new Transaction({accountId: Strategy.accountId, subscriberId: subscriberId, type:orderType, symbol: symbol, tickPrice: orderPrice, amount: volume, profit: benefit, closed: false});
+        const interval = setInterval(async () => {
+            console.log(tradSignal.stopLoss)
+            stop_loss = tradSignal.stopLoss;
+            take_profit = tradSignal.takeProfit;
+            if (stopLoss.includes("%")) {
+                stop_loss = orderPrice - (extractNumbers(takeProfit)[0] - orderPrice) * extractNumbers(stopLoss)[0];
+            }
+            else if (stopLoss.includes("pips")) {
+                switch (orderType) {
+                    case "sell":
+                    case "sell limit":
+                    case "sell stop":
+                        stop_loss = orderPrice + extractNumbers(stopLoss)[0];
+                        // take_profit = orderPrice + takeProfit;
+                        break;
+                    default:
+                        stop_loss = orderPrice + extractNumbers(stopLoss)[0];
+                        // take_profit = orderPrice + takeProfit;
+                }
+            }
+            else stop_loss = extractNumbers(stopLoss)[0];
+            if (takeProfit.includes("%")) {
+                take_profit = orderPrice + (openPrice - extractNumbers(stopLoss)[0]) * extractNumbers(takeProfit)[0];
+            }
+            else if (stopLoss.includes("pips")) {
+                switch (orderType) {
+                    case "sell":
+                    case "sell limit":
+                    case "sell stop":
+                        stop_loss = orderPrice - extractNumbers(takeProfit)[0];
+                        // take_profit = orderPrice + takeProfit;
+                        break;
+                    default:
+                        // stop_loss = orderPrice - stopLoss;
+                        take_profit = orderPrice + extractNumbers(takeProfit)[0];
+                }
+            }
+            else take_profit = extractNumbers(takeProfit)[0];
+            let trailing = strategy.trailing;
+            let executionPrice;
+            let tradeExecuted = false;
+            let previousPrice = orderPrice
+            let currentPrice;
+            // benefit += 1;
+            // if(benefit == 10) clearInterval(interval);
+        },100)
+
+    // Continuously monitor the market price
+
+
+    
+        let trailing = strategy.trailing;
+        let executionPrice;
+        let tradeExecuted = false;
+        let previousPrice = orderPrice
+        let currentPrice;
+        const intervals = setInterval(async () => {
+            if (orderType == "buy" || orderType == "buy limit" || orderType == "buy stop"){
+                currentPrice = marketSellPrices[symbol];
+            }
+            else currentPrice = marketBuyPrices[symbol];
+            if (trailing) {
+                if(currentPrice > previousPrice ) {
+                    if (orderType == "buy" || orderType == "buy limit" || orderType == "buy stop"){
+                        stopLoss = currentPrice + strategy.stopLoss;
+                        takeProfit = currentPrice - strategy.takeProfit;
+                    }
+                    else {
+                        stopLoss = currentPrice - strategy.stopLoss;
+                        takeProfit = currentPrice + strategy.takeProfit;
+                    }
+                    previousPrice = currentPrice;
+                }
+            }
+                // Check if the price has reached the take-profit or stop-loss level
+            if (orderType == "buy") {
+                console.log("orderPrice", orderPrice)
+                if (!currentPrice) {
+                    clearInterval(interval);
+                    return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                }
+                console.log(currentPrice);
+                    // Apply slippage to the current price
+                const slippageAmount = currentPrice * (slippage / 100);
+                executionPrice = currentPrice + slippageAmount;
+                console.log(slippageAmount, "----")
+                if (executionPrice >= takeProfit) {
+                    benefit = (currentPrice - orderPrice) * volume * 100000;
+                    tradeExecuted = true;
+                    clearInterval(interval);
+                } else if (executionPrice <= stopLoss) {
+                    benefit = (orderPrice - currentPrice) * volume * 100000;
+                    tradeExecuted = true;
+                    clearInterval(interval);
+                }
+            }
+            else if (orderType == "sell") {
+                if (!currentPrice) {
+                    clearInterval(interval);
+                    return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                }
+                console.log(currentPrice);
+                    // Apply slippage to the current price
+                const slippageAmount = currentPrice * (slippage / 100);
+                executionPrice = currentPrice + slippageAmount;
+                console.log(slippageAmount, "----")
+                if (executionPrice >= takeProfit) {
+                    benefit = (orderPrice-currentPrice) * volume * 100000;
+                    tradeExecuted = true;
+                    clearInterval(interval);
+                } else if (executionPrice <= stopLoss) {
+                    benefit = (currentPrice-orderPrice) * volume * 100000;
+                    tradeExecuted = true;
+                    clearInterval(interval);
+                }
+            }
+            else if (orderType == "buy limit") {
+                if (!currentPrice) {
+                    clearInterval(interval);
+                    return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                }
+                console.log(currentPrice);
+                    // Apply slippage to the current price
+                const slippageAmount = currentPrice * (slippage / 100);
+                executionPrice = currentPrice + slippageAmount;
+                console.log(slippageAmount, "----")
+                if (executionPrice <= price) {
+                    benefit = (orderPrice - price) * volume * 100000;
+                    tradeExecuted = true;
+                    clearInterval(interval);
+                }
+            }
+            else if (orderType == "sell limit") {
+                if (!currentPrice) {
+                    clearInterval(interval);
+                    return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                }
+                console.log(currentPrice);
+                    // Apply slippage to the current price
+                const slippageAmount = currentPrice * (slippage / 100);
+                executionPrice = currentPrice + slippageAmount;
+                console.log(slippageAmount, "----")
+                if (executionPrice >= price) {
+                    benefit = (price - orderPrice) * volume * 100000;
+                    tradeExecuted = true;
+                    clearInterval(interval);
+                }
+            }
+            else if (orderType == "buy stop") {
+                if (!currentPrice) {
+                    clearInterval(interval);
+                    return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                }
+                console.log(currentPrice);
+                    // Apply slippage to the current price
+                const slippageAmount = currentPrice * (slippage / 100);
+                executionPrice = currentPrice + slippageAmount;
+                console.log(slippageAmount, "----")
+                if (executionPrice >= price) {
+                    benefit = (orderPrice - price) * volume * 100000;
+                    tradeExecuted = true;
+                    clearInterval(interval);
+                }
+            }
+            else if (orderType == "sell stop") {
+                if (!currentPrice) {
+                    clearInterval(interval);
+                    return res.status(404).json({ error: `Symbol "${symbol}" not found` });
+                }
+                console.log(currentPrice);
+                    // Apply slippage to the current price
+                const slippageAmount = currentPrice * (slippage / 100);
+                executionPrice = currentPrice + slippageAmount;
+                console.log(slippageAmount, "----")
+                if (executionPrice <= price) {
+                    benefit = (price - orderPrice) * volume * 100000;
+                    tradeExecuted = true;
+                    clearInterval(interval);
+                }
+            }
+            console.log("orderType: ", orderType, "\nbenefit: ", benefit)
+        
+            if (tradeExecuted) {
+                await transaction.updateOne({accountId: accountId, subscriberId: subscriberId, symbol: symbol}, {$set: {profit: benefit, closed: true}});
+                await Strategy.updateOne({accountId: accountId, subscriberId: subscriberId, symbol: symbol}, {$set: {profit: strategy.profit+benefit, dailyProfit: strategy.dailyProfit + benefit}});
+                // Simulate the trade execution
+                console.log(`Executed a buy order for ${symbol} at ${currentPrice} with a volume of ${volume}. Benefit: ${benefit}`);
+                res.json({ currentPrice, orderPrice, benefit });
+            }
+        }, 100); // Check the market price every 100 milliseconds
+    }
+    else {
+        return res.status(404).json({message: "Subscriber is already Closed"})
+    }
+}
+
 exports.orders = async (req, res) => {
     try {
         console.log("orders");
         const subscriberId = req.params.subscriberId;
-        const  {symbol, orderType, volume, price, slippage, stopLoss, takeProfit, comment, accountId} = req.body;
-        if (!symbol || !orderType || !volume || !slippage || !stopLoss || !takeProfit) {
+        const  {symbol, orderType, volume, openPrice, slipPage, stopLoss, takeProfit, comment, accountId} = req.body;
+        if (!symbol || !orderType || !volume || !slipPage || !stopLoss || !takeProfit) {
             return res.status(400).json({ error: 'Missing required parameters' });
         } 
     
@@ -352,193 +585,16 @@ exports.orders = async (req, res) => {
             return res.status(400).json({ error: 'Volume must be a positive number' });
         }
     
-        if (slippage < 0 || stopLoss < 0 || takeProfit < 0) {
+        if (slipPage < 0 || stopLoss < 0 || takeProfit < 0) {
             return res.status(400).json({ error: 'Slippage, stop loss, and take profit must be positive numbers' });
         }
         
         // Validate input parameters
-        if (!symbol || !orderType || !volume || !price || !slippage || !stopLoss || !takeProfit) {
+        if (!symbol || !orderType || !volume || !openPrice || !slipPage || !stopLoss || !takeProfit) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
-    
-        // Continuously monitor the market price
-        const strategy = await Strategy.findOne({strategyId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol});
-
-        let stop_loss = stopLoss;
-        let take_profit = takeProfit;
-        if (strategy.stopLoss.includes("%")) {
-            stop_loss = extractNumbers(strategy.takeProfit)[0] * extractNumbers(strategy.stopLoss)[0];
-        }
-        else stop_loss = extractNumbers(strategy.stopLoss)[0];
-        if (strategy.takeProfit.includes("%")) {
-            take_profit = extractNumbers(strategy.stopLoss)[0] * extractNumbers(strategy.takeProfit)[0];
-        }
-        else take_profit = extractNumbers(strategy.takeProfit)[0];
-
-        let orderPrice;
-          // Set the first market price
-          if (!orderPrice) {
-            switch (orderType) {
-                case "sell":
-                case "sell limit":
-                case "sell stop":
-                    orderPrice = marketBuyPrices[symbol];
-                    stop_loss = orderPrice - stopLoss;
-                    take_profit = orderPrice + takeProfit;
-                    break;
-                default:
-                    orderPrice = marketSellPrices[symbol];
-                    stop_loss = orderPrice - stopLoss;
-                    take_profit = orderPrice + takeProfit;
-            }
-        }
-        let benefit;
-        const transaction = new Transaction({accountId: accountId, subscriberId: subscriberId, type:orderType, symbol: symbol, tickPrice: orderPrice, amount: volume, profit: benefit, closed: false})
-        
-        if(strategy.removedState === false) {
-            let trailing = strategy.trailing;
-            let executionPrice;
-            let tradeExecuted = false;
-            let previousPrice = orderPrice
-            let currentPrice;
-            const interval = setInterval(async () => {
-                if (orderType == "buy" || orderType == "buy limit" || orderType == "buy stop"){
-                    currentPrice = marketSellPrices[symbol];
-                }
-                else currentPrice = marketBuyPrices[symbol];
-                if (trailing) {
-                    if(currentPrice > previousPrice ) {
-                        if (orderType == "buy" || orderType == "buy limit" || orderType == "buy stop"){
-                            stopLoss = currentPrice + strategy.stopLoss;
-                            takeProfit = currentPrice - strategy.takeProfit;
-                        }
-                        else {
-                            stopLoss = currentPrice - strategy.stopLoss;
-                            takeProfit = currentPrice + strategy.takeProfit;
-                        }
-                        previousPrice = currentPrice;
-                    }
-                }
-                    // Check if the price has reached the take-profit or stop-loss level
-                if (orderType == "buy") {
-                    console.log("orderPrice", orderPrice)
-                    if (!currentPrice) {
-                        clearInterval(interval);
-                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
-                    }
-                    console.log(currentPrice);
-                        // Apply slippage to the current price
-                    const slippageAmount = currentPrice * (slippage / 100);
-                    executionPrice = currentPrice + slippageAmount;
-                    console.log(slippageAmount, "----")
-                    if (executionPrice >= takeProfit) {
-                        benefit = (currentPrice - orderPrice) * volume * 100000;
-                        tradeExecuted = true;
-                        clearInterval(interval);
-                    } else if (executionPrice <= stopLoss) {
-                        benefit = (orderPrice - currentPrice) * volume * 100000;
-                        tradeExecuted = true;
-                        clearInterval(interval);
-                    }
-                }
-                else if (orderType == "sell") {
-                    if (!currentPrice) {
-                        clearInterval(interval);
-                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
-                    }
-                    console.log(currentPrice);
-                        // Apply slippage to the current price
-                    const slippageAmount = currentPrice * (slippage / 100);
-                    executionPrice = currentPrice + slippageAmount;
-                    console.log(slippageAmount, "----")
-                    if (executionPrice >= takeProfit) {
-                        benefit = (orderPrice-currentPrice) * volume * 100000;
-                        tradeExecuted = true;
-                        clearInterval(interval);
-                    } else if (executionPrice <= stopLoss) {
-                        benefit = (currentPrice-orderPrice) * volume * 100000;
-                        tradeExecuted = true;
-                        clearInterval(interval);
-                    }
-                }
-                else if (orderType == "buy limit") {
-                    if (!currentPrice) {
-                        clearInterval(interval);
-                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
-                    }
-                    console.log(currentPrice);
-                        // Apply slippage to the current price
-                    const slippageAmount = currentPrice * (slippage / 100);
-                    executionPrice = currentPrice + slippageAmount;
-                    console.log(slippageAmount, "----")
-                    if (executionPrice <= price) {
-                        benefit = (orderPrice - price) * volume * 100000;
-                        tradeExecuted = true;
-                        clearInterval(interval);
-                    }
-                }
-                else if (orderType == "sell limit") {
-                    if (!currentPrice) {
-                        clearInterval(interval);
-                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
-                    }
-                    console.log(currentPrice);
-                        // Apply slippage to the current price
-                    const slippageAmount = currentPrice * (slippage / 100);
-                    executionPrice = currentPrice + slippageAmount;
-                    console.log(slippageAmount, "----")
-                    if (executionPrice >= price) {
-                        benefit = (price - orderPrice) * volume * 100000;
-                        tradeExecuted = true;
-                        clearInterval(interval);
-                    }
-                }
-                else if (orderType == "buy stop") {
-                    if (!currentPrice) {
-                        clearInterval(interval);
-                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
-                    }
-                    console.log(currentPrice);
-                        // Apply slippage to the current price
-                    const slippageAmount = currentPrice * (slippage / 100);
-                    executionPrice = currentPrice + slippageAmount;
-                    console.log(slippageAmount, "----")
-                    if (executionPrice >= price) {
-                        benefit = (orderPrice - price) * volume * 100000;
-                        tradeExecuted = true;
-                        clearInterval(interval);
-                    }
-                }
-                else if (orderType == "sell stop") {
-                    if (!currentPrice) {
-                        clearInterval(interval);
-                        return res.status(404).json({ error: `Symbol "${symbol}" not found` });
-                    }
-                    console.log(currentPrice);
-                        // Apply slippage to the current price
-                    const slippageAmount = currentPrice * (slippage / 100);
-                    executionPrice = currentPrice + slippageAmount;
-                    console.log(slippageAmount, "----")
-                    if (executionPrice <= price) {
-                        benefit = (price - orderPrice) * volume * 100000;
-                        tradeExecuted = true;
-                        clearInterval(interval);
-                    }
-                }
-                console.log("orderType: ", orderType, "\nbenefit: ", benefit)
-            
-                if (tradeExecuted) {
-                    await transaction.updateOne({accountId: accountId, subscriberId: subscriberId, symbol: symbol}, {$set: {profit: benefit, closed: true}});
-                    await Strategy.updateOne({accountId: accountId, subscriberId: subscriberId, symbol: symbol}, {$set: {profit: strategy.profit+benefit, dailyProfit: strategy.dailyProfit + benefit}});
-                    // Simulate the trade execution
-                    console.log(`Executed a buy order for ${symbol} at ${currentPrice} with a volume of ${volume}. Benefit: ${benefit}`);
-                    res.json({ currentPrice, orderPrice, benefit });
-                }
-            }, 100); // Check the market price every 100 milliseconds
-        }
-        else {
-            return res.status(404).json({message: "Subscriber is already Closed"})
-        }
+        console.log('subscriberId', subscriberId)
+        order(subscriberId, symbol, orderType, volume, openPrice, slipPage, stopLoss, takeProfit, comment, accountId)
     } catch (e) {
         console.log(e);
         return res.status(500).json({message: "Internal Server Error!"})

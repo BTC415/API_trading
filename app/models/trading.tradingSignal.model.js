@@ -6,8 +6,8 @@ module.exports = mongoose => {
         subscriberPositionId: String,
         time: {type: Date, default: new Date()},
         symbol: {type: String, default: 'EURUSD'},
-        type: {type: String, default: 'DEAL_TYPE_BUY'},
-        side: {type: String, default: ''},
+        type: {type: String, default: 'market'},
+        side: {type: String, default: 'buy'},
         server: {type: String, default: "MT4"},
         openPrice: Number,
         stopLoss: String,
@@ -21,6 +21,8 @@ module.exports = mongoose => {
         timeFrame: {type: String, default: '1m'},
         closeAfter: Date,
         closeOnly: Boolean,
+        slipPage: {type: Number, default: 0},
+        demo: {type: Boolean, default: false}
     });
     
     schema.method("toJSON", function() {

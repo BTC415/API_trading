@@ -24,7 +24,7 @@ module.exports = app => {
     //Signal process
     router.post("/accounts/:accountId/signals", verifyUser, trading.signalProcessing)
 
-    router.post("/subscribers/:subsericberId/orders", verifyUser, trading.orders)
+    router.post("/subscribers/:subscriberId/orders", verifyUser, trading.orders)
 
     app.use("/api/trading", router);
   };
