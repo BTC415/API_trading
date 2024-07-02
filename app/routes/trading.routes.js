@@ -12,6 +12,9 @@ module.exports = app => {
     //Get Trading Signals
     router.get("/subscribers/:subscriberId/signals", verifyUser, trading.getTradingSignals)
 
+    //Update  Trading Signals
+    router.put("/subscribers/:subscriberId/strategy/:strategyId", verifyUser, trading.updateTradingSignals)
+
     //Get External Trading Signals
     router.get("/strategies/:strategyId/external-signals", verifyUser, trading.getExternalTradingSignals)
 

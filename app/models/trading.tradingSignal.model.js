@@ -19,6 +19,7 @@ module.exports = mongoose => {
         lotSize: {type: String, default: 'standard'},
         // pendingOrder: {},
         timeFrame: {type: String, default: '1m'},
+        profit: {type: Number, default: 0},
         closeAfter: Date,
         closeOnly: Boolean,
         slipPage: {type: Number, default: 0},
