@@ -1,0 +1,6 @@
+{
+  "MasterEA1.ex4": ["1_MT4", "2_MT4"],
+  "MasterEA2.ex5": ["1_MT5", "2_MT5", "3_MT5"],
+  "SlaveEA1.ex4": ["4_MT4", "5_MT4"],
+  "SlaveEA2.ex5": ["4_MT5", "5_MT5"]
+}
