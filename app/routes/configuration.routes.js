@@ -11,7 +11,7 @@ module.exports = app => {
     
 
     //Save Master Strategy
-    router.post("/master-strategies", verifyUser, configuration.saveMasterStrategy);
+    router.post("/master-strategies", configuration.saveMasterStrategy);
 
     // Get Strategies
     router.get("/masters", verifyUser, configuration.getMasters)
@@ -20,7 +20,7 @@ module.exports = app => {
     router.put("/master-strategies/:accountId", verifyUser, configuration.updateMasterStrategy)
   
     // Generate New Strategy Id
-    router.post("/slave-settings", verifyUser, configuration.saveSlaveSettings);
+    router.post("/slave-settings", configuration.saveSlaveSettings);
 
     // Get Strategies
     router.get("/strategies", verifyUser, configuration.getStrategies)

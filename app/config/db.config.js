@@ -1,6 +1,6 @@
 
 module.exports = {
-  url: "mongodb+srv://crystal:spskjim9939@cluster0.tod58ko.mongodb.net/"
+  url: "mongodb+srv://watcherznet:fFaotOG6gqR774ax@copytrading.wvukzrr.mongodb.net/?retryWrites=true&w=majority&appName=copytrading"
   // url: process.env.ATLAS_URL
 };
 // mongodb+srv://crystal:<password>@cluster0.tod58ko.mongodb.net/
