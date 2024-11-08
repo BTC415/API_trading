@@ -1,66 +1,106 @@
-# Node.js Express & MongoDB: CRUD Rest APIs
+# API Trading Platform
 
-For more detail, please visit:
-> [Node.js, Express & MongoDb: Build a CRUD Rest Api example](https://www.bezkoder.com/node-express-mongodb-crud-rest-api/)
+A robust trading signal management and copy trading system built with Node.js and MongoDB.
 
-Front-end that works well with this Back-end
-> [Axios Client](https://www.bezkoder.com/axios-request/)
+## Overview
 
-> [Angular 8](https://www.bezkoder.com/angular-crud-app/) / [Angular 10](https://www.bezkoder.com/angular-10-crud-app/) / [Angular 11](https://www.bezkoder.com/angular-11-crud-app/) / [Angular 12](https://www.bezkoder.com/angular-12-crud-app/) / [Angular 13](https://www.bezkoder.com/angular-13-crud-example/) / [Angular 14](https://www.bezkoder.com/angular-14-crud-example/) / [Angular 15](https://www.bezkoder.com/angular-15-crud-example/) / [Angular 16](https://www.bezkoder.com/angular-16-crud-example/)
+This platform enables automated trading signal management, strategy configuration, and copy trading functionality across multiple trading accounts. It provides a comprehensive API for managing trading operations, user authentication, and real-time signal processing.
 
-> [Vue 2 Client](https://www.bezkoder.com/vue-js-crud-app/) / [Vue 3 Client](https://www.bezkoder.com/vue-3-crud/) / [Vuetify Client](https://www.bezkoder.com/vuetify-data-table-example/)
+## Core Features
 
-> [React Client](https://www.bezkoder.com/react-crud-web-api/) / [React Redux Client](https://www.bezkoder.com/react-redux-crud-example/)
+- **Authentication System**
+  - JWT-based secure authentication
+  - User registration and login
+  - Token verification and role-based access control
 
-## More Practice
-> [Server side Pagination in Node.js with MongoDB and Mongoose](https://www.bezkoder.com/node-js-mongodb-pagination/)
+- **Trading Signal Management**
+  - External signal processing
+  - Trading signal generation and distribution
+  - Real-time signal copying between accounts
 
-> [Node.js Express File Upload to MongoDB example](https://www.bezkoder.com/node-js-upload-store-images-mongodb/)
+- **Strategy Configuration**
+  - Master strategy management
+  - Slave settings configuration
+  - Portfolio strategy handling
+  - Risk management settings
 
-Security:
-> [Node.js + MongoDB: User Authentication & Authorization with JWT](https://www.bezkoder.com/node-js-mongodb-auth-jwt/)
+- **Transaction Tracking**
+  - Detailed transaction history
+  - Performance metrics
+  - Stop-out management
 
-Associations:
-> [MongoDB One-to-One relationship tutorial with Mongoose examples](https://www.bezkoder.com/mongoose-one-to-one-relationship-example/)
+## Technical Stack
 
-> [MongoDB One-to-Many Relationship tutorial with Mongoose examples](https://www.bezkoder.com/mongoose-one-to-many-relationship/)
+- **Backend**: Node.js/Express.js
+- **Database**: MongoDB
+- **Authentication**: JWT
+- **Trading Integration**: MT4 API
+- **Security**: Crypto module for randomization
 
-> [MongoDB Many-to-Many Relationship with Mongoose examples](https://www.bezkoder.com/mongodb-many-to-many-mongoose/)
+## API Endpoints
 
-Fullstack:
-> [Vue + Node.js + Express + MongoDB example](https://www.bezkoder.com/vue-node-express-mongodb-mevn-crud/)
+### Authentication
+- POST `/auth/register` - User registration
+- POST `/auth/login` - User login
 
-> [Angular 8 + Node.js + Express + MongoDB example](https://www.bezkoder.com/angular-mongodb-node-express/)
+### Configuration
+- POST `/configuration/master-strategies` - Create master strategy
+- GET `/configuration/strategies` - Retrieve strategies
+- PUT `/configuration/strategies/:strategyId` - Update strategy
+- DELETE `/configuration/strategies/:strategyId` - Remove strategy
 
-> [Angular 10 + Node.js + Express + MongoDB example](https://www.bezkoder.com/angular-10-mongodb-node-express/)
+### Trading
+- Multiple endpoints for signal management and trade execution
+- Portfolio management endpoints
+- Transaction history endpoints
 
-> [Angular 11 + Node.js + Express + MongoDB example](https://www.bezkoder.com/angular-11-mongodb-node-js-express/)
+## Data Models
 
-> [Angular 12 + Node.js + Express + MongoDB example](https://www.bezkoder.com/angular-12-mongodb-node-js-express/)
+- **Authentication Model**: User credentials and access management
+- **Strategy Models**: Master, Slave, and Portfolio configurations
+- **Trading Models**: Signals, External signals, Stop-outs
+- **Transaction Model**: Trading history and performance tracking
 
-> [Angular 13 + Node.js + Express + MongoDB example](https://www.bezkoder.com/mean-stack-crud-example-angular-13/)
+## Security Features
 
-> [Angular 14 + Node.js + Express + MongoDB example](https://www.bezkoder.com/mean-stack-crud-example-angular-14/)
+- JWT-based authentication
+- Token expiration handling
+- Role-based access control
+- Secure password handling
 
-> [Angular 15 + Node.js + Express + MongoDB example](https://www.bezkoder.com/angular-15-node-js-express-mongodb/)
+## Installation
 
-> [Angular 16 + Node.js + Express + MongoDB example](https://www.bezkoder.com/angular-16-node-js-express-mongodb/)
-
-> [React + Node.js + Express + MongoDB example](https://www.bezkoder.com/react-node-express-mongodb-mern-stack/)
-
-Integration (run back-end & front-end on same server/port)
-> [Integrate React with Node.js Restful Services](https://www.bezkoder.com/integrate-react-express-same-server-port/)
-
-> [Integrate Angular with Node.js Restful Services](https://www.bezkoder.com/integrate-angular-12-node-js/)
-
-> [Integrate Vue with Node.js Restful Services](https://www.bezkoder.com/serve-vue-app-express/)
-
-## Project setup
-```
+```bash
 npm install
+npm start
 ```
 
-### Run
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
 ```
-node server.js
+PORT=3000
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+MT4_API_KEY=your_mt4_api_key
+MT4_API_SECRET=your_mt4_api_secret
 ```
+
+## Usage
+
+1. Configure trading strategies
+2. Set up signal copying rules
+3. Monitor transactions and performance
+4. Manage portfolio strategies
+5. Track trading signals and execution
+
+## Contribution
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a pull request
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
